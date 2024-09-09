@@ -1,0 +1,25 @@
+#!/usr/bin/env mg5_aMC
+
+import model sm-zp
+
+generate zp > all all
+output $SUB:workdir
+launch
+
+done
+
+set MZp $SUB:zp_mass
+set nevents = $SUB:nevent
+set lpp1 = 0
+set lpp2 = 0
+set ebeam1 = $SUB:zp_mass
+set ebeam2 = $SUB:zp_mass
+set pdlabel = none
+set use_syst = False
+done
+
+# Example output:
+#   === Results Summary for run: run_01 tag: tag_1 ===
+# 
+#      Width :   0.002301 +- 5.445e-08 GeV
+#      Nb of events :  10000
