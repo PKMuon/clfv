@@ -30,7 +30,7 @@ class MG5Card:
             content = content.replace(f'$SUB:{var}', str(vals[var]))
         return content
 
-    def run(self, vals, tmp_workdir=True, capture_output=True):
+    def run(self, vals, tmp_workdir=False, capture_output=False):
         if tmp_workdir: vals['workdir'] = tempfile.TemporaryDirectory().name
         content = self.sub(vals)
         datpath = tempfile.mktemp()
@@ -41,13 +41,13 @@ class MG5Card:
         return proc
 
     def run_width(self, vals):
-        proc = self.run(vals)
+        proc = self.run(vals, tmp_workdir=True, capture_output=True)
         output = proc.stdout.decode()
         width, width_unc, width_unit, nevent = self._width_pattern.search(output).groups()
         return float(width), float(width_unc), width_unit, int(nevent)
 
     def run_xs(self, vals):
-        proc = self.run(vals)
+        proc = self.run(vals, tmp_workdir=True, capture_output=True)
         output = proc.stdout.decode()
         xs, xs_unc, xs_unit, nevent = self._xs_pattern.search(output).groups()
         return float(xs), float(xs_unc), xs_unit, int(nevent)
