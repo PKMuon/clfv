@@ -7,6 +7,7 @@ zp_masses = np.array([0.11, 0.15, 0.20])
 zp_width_spline = MG5Width.MG5Width('data/zp_width_points.npz', masses_key='zp_masses', widths_key='zp_widths')
 mueee_sc_card = MG5Card.MG5Card('cards/mueee_sc.dat')
 mueee_tc_card = MG5Card.MG5Card('cards/mueee_tc.dat')
+mueee_st_card = MG5Card.MG5Card('cards/mueee_st.dat')
 muon_energies = np.logspace(-1, 2, 31)
 
 def make_mueee_point(zp_mass, muon_energy, card):
@@ -27,3 +28,6 @@ def make_mueee_sc_point(args):
 
 def make_mueee_tc_point(args):
     return make_mueee_point(*args, mueee_tc_card)
+
+def make_mueee_st_point(args):
+    return make_mueee_point(*args, mueee_st_card)
