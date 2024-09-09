@@ -11,6 +11,9 @@ class MG5Card:
     _width_pattern = re.compile(r'=== Results Summary for [^\n]* ===\s+'
                                r'Width\s*:\s*([0-9.Ee+-]+)\s*\+\-\s*([0-9.Ee+-]+)\s*(\S+)\s+'
                                r'Nb of events\s*:\s*(\d+)')
+    _xs_pattern = re.compile(r'=== Results Summary for [^\n]* ===\s+'
+                               r'Cross-section\s*:\s*([0-9.Ee+-]+)\s*\+\-\s*([0-9.Ee+-]+)\s*(\S+)\s+'
+                               r'Nb of events\s*:\s*(\d+)')
 
     def __init__(self, path):
         self.path = path
@@ -42,6 +45,12 @@ class MG5Card:
         output = proc.stdout.decode()
         width, width_unc, width_unit, nevent = self._width_pattern.search(output).groups()
         return float(width), float(width_unc), width_unit, int(nevent)
+
+    def run_xs(self, vals):
+        proc = self.run(vals)
+        output = proc.stdout.decode()
+        xs, xs_unc, xs_unit, nevent = self._xs_pattern.search(output).groups()
+        return float(xs), float(xs_unc), xs_unit, int(nevent)
 
 def load_cards(basedir='cards'):
     cards = { }

@@ -2,18 +2,22 @@
 
 import model sm-zp
 
-generate zp > all all
+generate mu+ e- > zp > e+ e-
 output $SUB:workdir
 launch
 
 done
 
 set MZp = $SUB:zp_mass
+set WZp = $SUB:zp_width
 set nevents = $SUB:nevent
 set lpp1 = 0
 set lpp2 = 0
-set ebeam1 = $SUB:zp_mass
-set ebeam2 = $SUB:zp_mass
+set ptl = -1.0
+set etal = -1.0
+set drll = -1.0
+set ebeam1 = $SUB:muon_energy
+set ebeam2 = $SUB:electron_energy
 set pdlabel = none
 set use_syst = False
 done
