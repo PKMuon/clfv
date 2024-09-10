@@ -8,7 +8,7 @@ zp_width_spline = MG5Width.MG5Width('data/zp_width_points.npz', masses_key='zp_m
 muemumu_sc_card = MG5Card.MG5Card('cards/muemumu_sc.dat')
 muemumu_tc_card = MG5Card.MG5Card('cards/muemumu_tc.dat')
 muemumu_st_card = MG5Card.MG5Card('cards/muemumu_st.dat')
-muon_energies = np.logspace(-0.9, 2, 300)
+muon_energies = np.logspace(1.51, 3.00, 150)
 
 def make_muemumu_point(zp_mass, muon_energy, card):
     print('make_muemumu_point:', zp_mass, muon_energy, sep='\t', flush=True)

@@ -3,7 +3,6 @@
 import numpy as np
 from make_muemumu_point import make_muemumu_sc_point, zp_masses, muon_energies
 from MG5Run import pool
-muon_energies = np.logspace(1.52, 2, 49)
 
 args = [ ]
 for zp_mass in zp_masses:

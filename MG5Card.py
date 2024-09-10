@@ -4,6 +4,7 @@ import re
 import tempfile
 import subprocess
 import shutil
+import numpy as np
 
 class MG5Card:
 
