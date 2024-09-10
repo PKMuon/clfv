@@ -1,7 +1,7 @@
 import multiprocessing
-import getpass
+import os
 
-user = getpass.getuser()
+hostname = os.getenv('HOSTNAME')
 nproc = multiprocessing.cpu_count()
-if 'phy.pku.edu.cn' in user: nproc //= 2
+if 'phy.pku.edu.cn' in hostname: nproc //= 2
 pool = multiprocessing.Pool(nproc)
