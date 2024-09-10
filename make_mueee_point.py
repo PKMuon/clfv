@@ -11,7 +11,7 @@ mueee_st_card = MG5Card.MG5Card('cards/mueee_st.dat')
 muon_energies = np.logspace(-0.9, 2, 291)
 
 def make_mueee_point(zp_mass, muon_energy, card):
-    print('make_mueee_point:', zp_mass, muon_energy, sep='\t')
+    print('make_mueee_point:', zp_mass, muon_energy, sep='\t', flush=True)
     zp_width = zp_width_spline.compute(zp_mass)[0]
     xs, xs_unc, unit, nevent = card.run_xs({
         'nevent': 10000, 'zp_mass': zp_mass, 'zp_width': zp_width,
@@ -20,7 +20,7 @@ def make_mueee_point(zp_mass, muon_energy, card):
     unit = MG5Units.units[unit]
     xs *= unit
     xs_unc *= unit
-    print('make_mueee_point:', zp_mass, muon_energy, xs, xs_unc, sep='\t')
+    print('make_mueee_point:', zp_mass, muon_energy, xs, xs_unc, sep='\t', flush=True)
     return xs, xs_unc
 
 def make_mueee_sc_point(args):

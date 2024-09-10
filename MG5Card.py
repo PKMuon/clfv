@@ -43,13 +43,23 @@ class MG5Card:
     def run_width(self, vals):
         proc = self.run(vals, tmp_workdir=True, capture_output=True)
         output = proc.stdout.decode()
-        width, width_unc, width_unit, nevent = self._width_pattern.search(output).groups()
+        try:
+            width, width_unc, width_unit, nevent = self._width_pattern.search(output).groups()
+        except Exception:
+            width, width_unc, width_unit, nevent = np.nan, np.nan, 'GeV', 0
+            error = proc.stderr.decode()
+            print('ERROR: run_width failed', output, error, sep='\n' + '-' * 40 + '\n', flush=True)
         return float(width), float(width_unc), width_unit, int(nevent)
 
     def run_xs(self, vals):
         proc = self.run(vals, tmp_workdir=True, capture_output=True)
         output = proc.stdout.decode()
-        xs, xs_unc, xs_unit, nevent = self._xs_pattern.search(output).groups()
+        try:
+            xs, xs_unc, xs_unit, nevent = self._xs_pattern.search(output).groups()
+        except Exception:
+            xs, xs_unc, xs_unit, nevent = np.nan, np.nan, 'pb', 0
+            error = proc.stderr.decode()
+            print('ERROR: run_xs failed', output, error, sep='\n' + '-' * 40 + '\n', flush=True)
         return float(xs), float(xs_unc), xs_unit, int(nevent)
 
 def load_cards(basedir='cards'):
@@ -60,4 +70,4 @@ def load_cards(basedir='cards'):
 
 if __name__ == '__main__':
     for path, card in load_cards().items():
-        print(path, card.vars, card.content, sep='\n' + '-' * 40 + '\n')
+        print(path, card.vars, card.content, sep='\n' + '-' * 40 + '\n', flush=True)
