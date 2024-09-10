@@ -10,7 +10,8 @@ xses = mueee_points['xses']
 for zp_mass, xs in zip(zp_masses, xses):
     prefix = r'$m_{Z^\prime} = $' + f'{zp_mass} GeV'
     #plt.plot(muon_energies, xs, '.-', label=[prefix, prefix + ', uncertainty'])
-    plt.plot(muon_energies, xs[:,0], '.-', label=prefix)
+    #plt.plot(muon_energies, xs[:,0], '.-', label=prefix)
+    plt.plot(muon_energies, xs[:,0], label=prefix)
 plt.xlabel('Muon energy [GeV]')
 plt.ylabel('Cross section [pb]')
 plt.xscale('log')
