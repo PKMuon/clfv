@@ -1,5 +1,7 @@
 #!/usr/bin/env mg5_aMC
 
+set nb_core 2
+
 import model sm-zp
 
 generate mu+ e- > mu+ mu-
