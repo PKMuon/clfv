@@ -20,8 +20,8 @@ if INFILE.endswith('.gz'):
             file.write(gzfile.read())
 INFILE = INFILE[:-3]
 outfile = ROOT.TFile(OUTFILE, 'RECREATE')
-p_pos = ROOT.TH1D('log10p_pos', '#logarithmic momentum of #mu^{+}', 100, 1, 2)
-p_neg = ROOT.TH1D('log10p_neg', '#logarithmic momentum of #mu^{-}', 100, 1, 2)
+p_pos = ROOT.TH1D('log10p_pos', 'logarithmic momentum of #mu^{+}', 100, 1, 2)
+p_neg = ROOT.TH1D('log10p_neg', 'logarithmic momentum of #mu^{-}', 100, 1, 2)
 costheta_pos = ROOT.TH1D('omcostheta_pos', '1 - cos(#theta) of #mu^{+}', 100, 0, 0.5e-6)
 costheta_neg = ROOT.TH1D('omcostheta_neg', '1 - cos(#theta) of #mu^{-}', 100, 0, 0.5e-6)
 phi_pos = ROOT.TH1D('phi_pos', '#phi of #mu^{+}', 100, -math.pi, math.pi)
