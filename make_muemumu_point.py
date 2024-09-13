@@ -15,11 +15,13 @@ muon_energies = np.logspace(1.51, 3.00, 150)
 def make_muemumu_point(zp_mass, muon_energy, card, nevent):
     print('make_muemumu_point:', zp_mass, muon_energy, sep='\t', flush=True)
     zp_width = zp_width_spline.compute(zp_mass)[0]
+    muemumu_kinematics = os.path.abspath(f'data/muemumu_ki_{zp_mass:.18e}_{muon_energy:.18e}.root')
+    if card is muemumu_ki_card and os.path.exists(muemumu_kinematics): return
     xs, xs_unc, unit, nevent = card.run_xs({
         'nevent': nevent, 'zp_mass': zp_mass, 'zp_width': zp_width,
         'electron_energy': 0.511e-3, 'muon_energy': muon_energy,
         'make_muemumu_distributions': os.path.abspath('make_muemumu_distributions.py'),
-        'muemumu_kinematics': os.path.abspath(f'data/muemumu_ki_{zp_mass:.18e}_{muon_energy:.18e}.root'),
+        'muemumu_kinematics': muemumu_kinematics,
     })
     unit = MG5Units.units[unit]
     xs *= unit
