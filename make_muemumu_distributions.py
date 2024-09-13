@@ -26,11 +26,11 @@ INFILE = INFILE[:-3]
 outfile = ROOT.TFile(OUTFILE, 'RECREATE')
 p_pos = ROOT.TH1D('log10p_pos', 'logarithmic momentum of #mu^{+};log_{10}p_{#mu^{+}};Events', 100, 1, 2)
 p_neg = ROOT.TH1D('log10p_neg', 'logarithmic momentum of #mu^{-};log_{10}p_{#mu^{-}};Events', 100, 1, 2)
-costheta_pos = ROOT.TH1D('omcostheta_pos', '1 - cos(#theta) of #mu^{+};1 - cos(#theta_{#mu^{+}});Events', 100, 0, 0.5e-6)
-costheta_neg = ROOT.TH1D('omcostheta_neg', '1 - cos(#theta) of #mu^{-};1 - cos(#theta_{#mu^{-}});Events', 100, 0, 0.5e-6)
+theta_pos = ROOT.TH1D('theta_pos', '#theta of #mu^{+};#theta_{#mu^{+}};Events', 100, 0, 0.01)
+theta_neg = ROOT.TH1D('theta_neg', '#theta of #mu^{-};#theta_{#mu^{-}};Events', 100, 0, 0.01)
 phi_pos = ROOT.TH1D('phi_pos', '#phi of #mu^{+};#phi_{#mu^{+}};Events', 100, -math.pi, math.pi)
 phi_neg = ROOT.TH1D('phi_neg', '#phi of #mu^{-};#phi_{#mu^{-}};Events', 100, -math.pi, math.pi)
-hists = [p_pos, p_neg, costheta_pos, costheta_neg, phi_pos, phi_neg]
+hists = [p_pos, p_neg, theta_pos, theta_neg, phi_pos, phi_neg]
 
 reader = lhereader.LHEReader(INFILE)
 for event in reader:
@@ -42,8 +42,8 @@ for event in reader:
     p4_neg = ROOT.TLorentzVector(mu_neg.px, mu_neg.py, mu_neg.pz, mu_neg.energy)
     p_pos.Fill(math.log10(p4_pos.P()))
     p_neg.Fill(math.log10(p4_neg.P()))
-    costheta_pos.Fill(1 - p4_pos.CosTheta())
-    costheta_neg.Fill(1 - p4_neg.CosTheta())
+    theta_pos.Fill(p4_pos.Theta())
+    theta_neg.Fill(p4_neg.Theta())
     phi_pos.Fill(p4_pos.Phi())
     phi_neg.Fill(p4_neg.Phi())
 
