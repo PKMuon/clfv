@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from matplotlib.collections import LineCollection
 
 ki_points = glob.glob('data/muemumu_ki_*.root')
+#ki_points = glob.glob('data/muemumu_ki_*e+01.root')
 ki_point_pattern = re.compile(r'muemumu_ki_([^_/]*)_([^_/]*)\.root$')
 
 # Load kinematics points.
