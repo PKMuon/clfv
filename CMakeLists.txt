@@ -32,8 +32,9 @@ include(${ROOT_USE_FILE})
 # External PDG support
 #
 add_subdirectory(particle)
-include_directories(particle/include)
+include_directories(SYSTEM particle/include)
 link_directories(particle/lib)
+add_compile_definitions(PDG_PATH="${PROJECT_SOURCE_DIR}/particle/share/cache")
 
 ##----------------------------------------------------------------------------
 ## Find yaml-cpp (required package)
@@ -79,11 +80,11 @@ include_directories(SYSTEM ${Geant4_INCLUDE_DIR} ${ROOT_INCLUDE_DIRS} ${YAML_CPP
 file(GLOB sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/src/*.cc)
 file(GLOB headers CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/*.hh)
 
-##----------------------------------------------------------------------------
-## Add the executable, and link it to the Geant4 libraries
-##
-#add_executable(clfv clfv.cc ${sources} ${headers})
-#target_link_libraries(clfv ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${YAML_CPP_LIBRARIES})
+#----------------------------------------------------------------------------
+# Add the executable, and link it to the Geant4 libraries
+#
+add_executable(clfv clfv.cc ${sources} ${headers})
+target_link_libraries(clfv particle ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 ##----------------------------------------------------------------------------
 ## Copy all scripts to the build directory, i.e. the directory in which we
