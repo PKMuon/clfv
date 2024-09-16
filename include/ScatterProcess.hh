@@ -4,8 +4,7 @@
 #include <utility>
 #include <tuple>
 #include <memory>
-
-class TH1;
+#include <TH1.h>
 
 class MupTargetEnToLL {
 public:

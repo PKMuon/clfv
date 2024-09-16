@@ -35,6 +35,7 @@ add_subdirectory(particle)
 include_directories(SYSTEM particle/include)
 link_directories(particle/lib)
 add_compile_definitions(PDG_PATH="${PROJECT_SOURCE_DIR}/particle/share/cache")
+add_compile_definitions(DATA_DIR="${PROJECT_SOURCE_DIR}/data")
 
 ##----------------------------------------------------------------------------
 ## Find yaml-cpp (required package)

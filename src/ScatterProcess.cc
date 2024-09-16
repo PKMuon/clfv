@@ -10,7 +10,7 @@
 #include <TH1.h>
 
 #ifndef PDG_PATH
-#define PDG_PATH ""
+#define PDG_PATH  ""
 #endif  /* PDG_PATH */
 
 MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
@@ -82,7 +82,7 @@ void MupTargetEnToLL::LoadPoints(const char *points_file)
   G4cout << "Loading points from " << points_file << G4endl;
   auto file = TFile::Open(points_file);
   if(!file->IsOpen()) G4Exception("MupTargetEnToLL::LoadPoints", "FileOpenError", FatalException, "Failed to open points file.");
-  auto tree = (TTree *)file->Get("points");
+  auto tree = (TTree *)file->Get("ki_points");
   if(!tree) G4Exception("MupTargetEnToLL::LoadPoints", "TreeGetError", FatalException, "Failed to get points tree.");
 
   double mup_energy, xs;
@@ -95,7 +95,7 @@ void MupTargetEnToLL::LoadPoints(const char *points_file)
   for(ientry = 0; tree->GetEntry(ientry); ++ientry) {
     auto lp_out_alpha_clone = (TH1 *)lp_out_alpha->Clone();
     lp_out_alpha_clone->SetDirectory(nullptr);
-    points.emplace_back(mup_energy, xs, lp_out_alpha_clone);
+    points.emplace_back(mup_energy * GeV, xs, lp_out_alpha_clone);
   }
   G4cout << "Loaded " << ientry << " points" << G4endl;
   std::sort(points.begin(), points.end());
@@ -114,7 +114,7 @@ static std::pair<double, double> linear_interp_weights(double x1, double x2, dou
 std::pair<double, double> MupTargetEnToLL::Sample(double mup_energy) const
 {
   // Locate end points.
-  auto right = std::lower_bound(points.begin(), points.end(), mup_energy, [](auto &p, double e) { return std::get<1>(p) < e; });
+  auto right = std::lower_bound(points.begin(), points.end(), mup_energy, [](auto &p, double e) { return std::get<0>(p) < e; });
   if(right == points.begin() || right == points.end()) return {0, NAN};
   auto left = prev(right);
   auto &[l_mup_energy, l_xs, l_lp_out_alpha] = *left;
