@@ -3,8 +3,9 @@
 #include <Randomize.hh>
 #include <particle.h>
 #include <math.h>
-//#include <iostream>
-//#include <iomanip>
+#include <stdexcept>
+#include <iostream>
+#include <iomanip>
 
 #ifndef PDG_PATH
 #define PDG_PATH ""
@@ -20,16 +21,23 @@ MupTargetEnToLL::MupTargetEnToLL(int l_pid)
 
 static double compute_alpha(double beta, double gamma, double e_com, double mup_p_com, double mup_out_theta)
 {
-  double A = tan(mup_out_theta) * gamma;
-  double B = beta * e_com / (2 * mup_p_com);
-  //std::cout << std::scientific << std::setprecision(15) << __func__ << ": A=" << A << "  B=" << B << std::endl;
-  double alpha = 0;
-  for(;;) {
-    double alpha_new = atan(A * (1 + B / cos(alpha)));
-    //std::cout << __func__ << ": alpha=" << alpha_new << std::endl;
-    if(fabs(alpha - alpha_new) < DBL_EPSILON * alpha_new) return alpha_new;
-    alpha = alpha_new;
+  double A = tan(mup_out_theta) * gamma, A2 = A*A;
+  if(A == 0) return 0;
+  double B = beta * e_com / (2 * mup_p_com), B2 = B*B, A2B = A2 * B;
+  std::cout << std::scientific << std::setprecision(15)
+            << "A=" << A << " B=" << B << std::endl;
+  double C = (A2B*A2B - (1 + A2) * (A2*B2 - 1));
+  if(C < 0) throw std::runtime_error("no solution for alpha");
+  C = sqrt(C);
+  for(double S = -1; S <= 1; S += 2) {
+  //for(double S = 1; S >= -1; S -= 2) {
+    double cos_alpha = (-A2B + S * C) / (1 + A2), sin_alpha = sqrt(1 - cos_alpha*cos_alpha);
+    double A_new = sin_alpha / (cos_alpha + B);
+    std::cout << std::scientific << std::setprecision(15)
+              << "alpha=" << acos(cos_alpha) << " A=" << A << " A_new=" << A_new << std::endl;
+    if(fabs(A_new - A) < 10 * DBL_EPSILON * A) return acos(cos_alpha);
   }
+  throw std::runtime_error("computation diverges");
 }
 
 void MupTargetEnToLL::Scatter(double mup_energy, double mup_out_theta, G4ThreeVector &mup_out_p, G4ThreeVector &mun_out_p)

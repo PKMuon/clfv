@@ -36,10 +36,15 @@ reader = lhereader.LHEReader(INFILE)
 for event in reader:
     final_state_particles = [p for p in event.particles if p.status == 1]
     assert len(final_state_particles) == 2
-    mu_pos = [p for p in final_state_particles if p.pdgid == -13][0]
-    mu_neg = [p for p in final_state_particles if p.pdgid == +13][0]
-    p4_pos = ROOT.TLorentzVector(mu_pos.px, mu_pos.py, mu_pos.pz, mu_pos.energy)
-    p4_neg = ROOT.TLorentzVector(mu_neg.px, mu_neg.py, mu_neg.pz, mu_neg.energy)
+    l_pos = [p for p in final_state_particles if p.pdgid == -13][0]
+    l_neg = [p for p in final_state_particles if p.pdgid == +13][0]
+    p4_pos = ROOT.TLorentzVector(l_pos.px, l_pos.py, l_pos.pz, l_pos.energy)
+    p4_neg = ROOT.TLorentzVector(l_neg.px, l_neg.py, l_neg.pz, l_neg.energy)
+    p4 = p4_pos + p4_neg
+    boost = p4.BoostVector()
+    p4_pos.Boost(-boost)
+    p4_neg.Boost(-boost)
+
     p_pos.Fill(math.log10(p4_pos.P()))
     p_neg.Fill(math.log10(p4_neg.P()))
     theta_pos.Fill(p4_pos.Theta())
