@@ -20,7 +20,7 @@ def make_muemumu_point(zp_mass, muon_energy, card, nevent):
     xs, xs_unc, unit, nevent = card.run_xs({
         'nevent': nevent, 'zp_mass': zp_mass, 'zp_width': zp_width,
         'electron_energy': 0.511e-3, 'muon_energy': muon_energy,
-        'make_muemumu_distributions': os.path.abspath('make_muemumu_distributions.py'),
+        'make_muemumu_distributions': os.path.abspath('make_muell_distributions.py'),
         'muemumu_kinematics': muemumu_kinematics,
     })
     unit = MG5Units.units[unit]
