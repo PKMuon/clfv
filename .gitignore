@@ -14,3 +14,5 @@ lib/
 *.pdf
 *.log
 py.py
+!/data/*.root
+!/data/*.npz
