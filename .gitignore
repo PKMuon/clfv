@@ -13,3 +13,4 @@ lib/
 .vscode
 *.pdf
 *.log
+py.py
