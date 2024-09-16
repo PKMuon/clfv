@@ -24,13 +24,13 @@ if INFILE.endswith('.gz'):
             file.write(gzfile.read())
 INFILE = INFILE[:-3]
 outfile = ROOT.TFile(OUTFILE, 'RECREATE')
-p_pos = ROOT.TH1D('log10p_pos', 'logarithmic momentum of #mu^{+};log_{10}p_{#mu^{+}};Events', 100, 1, 2)
-p_neg = ROOT.TH1D('log10p_neg', 'logarithmic momentum of #mu^{-};log_{10}p_{#mu^{-}};Events', 100, 1, 2)
-theta_pos = ROOT.TH1D('theta_pos', '#theta of #mu^{+};#theta_{#mu^{+}};Events', 100, 0, 0.01)
-theta_neg = ROOT.TH1D('theta_neg', '#theta of #mu^{-};#theta_{#mu^{-}};Events', 100, 0, 0.01)
-phi_pos = ROOT.TH1D('phi_pos', '#phi of #mu^{+};#phi_{#mu^{+}};Events', 100, -math.pi, math.pi)
-phi_neg = ROOT.TH1D('phi_neg', '#phi of #mu^{-};#phi_{#mu^{-}};Events', 100, -math.pi, math.pi)
-hists = [p_pos, p_neg, theta_pos, theta_neg, phi_pos, phi_neg]
+p_pos = ROOT.TH1D('p_pos', 'momentum of #mu^{+};p_{#mu^{+}} [GeV];Events', 51, 0, 0.2)
+p_neg = ROOT.TH1D('p_neg', 'momentum of #mu^{-};p_{#mu^{-}} [GeV];Events', 51, 0, 0.2)
+alpha_pos = ROOT.TH1D('alpha_pos', '#alpha of #mu^{+};#alpha_{#mu^{+}};Events', 51, 0, math.pi)
+alpha_neg = ROOT.TH1D('alpha_neg', '#alpha of #mu^{-};#alpha_{#mu^{-}};Events', 51, 0, math.pi)
+phi_pos = ROOT.TH1D('phi_pos', '#phi of #mu^{+};#phi_{#mu^{+}};Events', 51, -math.pi, math.pi)
+phi_neg = ROOT.TH1D('phi_neg', '#phi of #mu^{-};#phi_{#mu^{-}};Events', 51, -math.pi, math.pi)
+hists = [p_pos, p_neg, alpha_pos, alpha_neg, phi_pos, phi_neg]
 
 reader = lhereader.LHEReader(INFILE)
 for event in reader:
@@ -45,10 +45,10 @@ for event in reader:
     p4_pos.Boost(-boost)
     p4_neg.Boost(-boost)
 
-    p_pos.Fill(math.log10(p4_pos.P()))
-    p_neg.Fill(math.log10(p4_neg.P()))
-    theta_pos.Fill(p4_pos.Theta())
-    theta_neg.Fill(p4_neg.Theta())
+    p_pos.Fill(p4_pos.P())
+    p_neg.Fill(p4_neg.P())
+    alpha_pos.Fill(p4_pos.Theta())
+    alpha_neg.Fill(p4_neg.Theta())
     phi_pos.Fill(p4_pos.Phi())
     phi_neg.Fill(p4_neg.Phi())
 
