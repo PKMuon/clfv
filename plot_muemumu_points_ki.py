@@ -33,7 +33,7 @@ for zp_mass, zp_mass_points in ki_points:
         with uproot.open(ki_point) as ki_point:
             for hist_name in ki_point.keys():
                 y, x = ki_point[hist_name].to_numpy()
-                x = np.mean([x[:-1] + x[1:]], axis=0)
+                x = np.mean([x[:-1], x[1:]], axis=0)
                 hist_name = re.sub(r';.*$', '', hist_name)
                 if hist_name not in lc_index:
                     lc_index[hist_name] = [ ]
