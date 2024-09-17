@@ -114,7 +114,7 @@ static std::pair<double, double> linear_interp_weights(double x1, double x2, dou
 std::pair<double, double> MupTargetEnToLL::Sample(double mup_energy) const
 {
   // Locate end points.
-  auto right = std::lower_bound(points.begin(), points.end(), mup_energy, [](auto &p, double e) { return std::get<0>(p) < e; });
+  auto right = std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
   if(right == points.begin() || right == points.end()) return {0, NAN};
   auto left = prev(right);
   auto &[l_mup_energy, l_xs, l_lp_out_alpha] = *left;
