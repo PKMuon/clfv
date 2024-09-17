@@ -16,3 +16,4 @@ lib/
 py.py
 !/data/*.root
 !/data/*.npz
+*_ki_*_*.root
