@@ -1,6 +1,11 @@
 #include "ScatterProcess.hh"
-#include <G4SystemOfUnits.hh>
 #include <G4ios.hh>
+#include <G4ParticleTable.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4Track.hh>
+#include <G4DynamicParticle.hh>
+#include <G4EventManager.hh>
+#include <G4TrackingManager.hh>
 #include <Randomize.hh>
 #include <particle.h>
 #include <algorithm>
@@ -19,6 +24,9 @@ MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
   e_mass = (double)db.query(11, "mass") * MeV;
   mu_mass = (double)db.query(13, "mass") * MeV;
   l_mass = (double)db.query(l_pid, "mass") * MeV;
+  G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
+  lp_def = particleTable->FindParticle(-abs(l_pid));
+  ln_def = particleTable->FindParticle(+abs(l_pid));
   LoadPoints(points_file);
 }
 
@@ -129,4 +137,34 @@ std::pair<double, double> MupTargetEnToLL::Sample(double mup_energy) const
   double lp_out_alpha = lp_out_alpha_hist->GetRandom();
 
   return {xs, lp_out_alpha};
+}
+
+double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) const
+{
+  // Compute xs and scattered momenta.
+  G4ThreeVector lp_p = lp_track->GetMomentum(), ln_out_p;
+  double xs = Scatter(lp_p, ln_out_p);
+  if(xs == 0) return 0;
+
+  // Collect track information.
+  const G4ThreeVector &position = lp_track->GetPosition();
+  const G4TouchableHandle &handle = lp_track->GetTouchableHandle();
+  G4double globalTime = lp_track->GetGlobalTime();
+
+  // Create scattered tracks.
+  auto lp_particle = new G4DynamicParticle(lp_def, lp_p);
+  auto ln_particle = new G4DynamicParticle(ln_def, ln_out_p);
+  lp_track = new G4Track(lp_particle, globalTime, position);
+  ln_out_track = new G4Track(ln_particle, globalTime, position);
+
+  // Register scattered tracks.
+  G4TrackingManager *trackingManager = G4EventManager::GetEventManager()->GetTrackingManager();
+  for(G4Track *track : {lp_track, ln_out_track}) {
+    track->SetTouchableHandle(handle);
+    trackingManager->ProcessOneTrack(track);
+  }
+
+  // Kill the precious track.
+  lp_track->SetTrackStatus(G4TrackStatus::fStopAndKill);
+  return xs;
 }
