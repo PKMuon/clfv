@@ -87,13 +87,13 @@ file(GLOB headers CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/*.hh)
 add_executable(clfv clfv.cc ${sources} ${headers})
 target_link_libraries(clfv particle ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
-##----------------------------------------------------------------------------
-## Copy all scripts to the build directory, i.e. the directory in which we
-## build clfv. This is so that we can run the executable directly because it
-## relies on these scripts being in the current working directory.
-##
-#file(GLOB scripts CONFIGURE_DEPENDS *.sh *.mac)
-#foreach(script ${scripts})
-#    get_filename_component(script ${script} NAME)
-#    configure_file(${PROJECT_SOURCE_DIR}/${script} ${PROJECT_BINARY_DIR}/${script} COPYONLY)
-#endforeach()
+#----------------------------------------------------------------------------
+# Copy all scripts to the build directory, i.e. the directory in which we
+# build clfv. This is so that we can run the executable directly because it
+# relies on these scripts being in the current working directory.
+#
+file(GLOB scripts CONFIGURE_DEPENDS run.sh *.mac)
+foreach(script ${scripts})
+    get_filename_component(script ${script} NAME)
+    configure_file(${PROJECT_SOURCE_DIR}/${script} ${PROJECT_BINARY_DIR}/${script} COPYONLY)
+endforeach()
