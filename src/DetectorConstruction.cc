@@ -31,6 +31,7 @@
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4NistManager.hh"
+#include "Randomize.hh"
 
 DetectorConstruction::DetectorConstruction()
 {
@@ -53,4 +54,9 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   auto world_p = new G4PVPlacement(NULL, {}, world_l, "world", NULL, false, 0, true);
 
   return world_p;
+}
+
+G4double DetectorConstruction::GetScatterZ() const
+{
+  return (0.5 - G4UniformRand()) * fWorldZ;
 }

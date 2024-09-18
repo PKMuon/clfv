@@ -38,6 +38,7 @@ public:
 
   G4VPhysicalVolume *Construct() override;
   G4ThreeVector GetSourcePosition() const { return fSourcePosition; }
+  G4double GetScatterZ() const;
 
 private:
   G4double fWorldX, fWorldY, fWorldZ;

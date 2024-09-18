@@ -27,13 +27,37 @@
 #include "SteppingAction.hh"
 #include "EventAction.hh"
 #include "Run.hh"
+#include "ScatterProcess.hh"
+#include "G4Step.hh"
+#include "Randomize.hh"
 
 SteppingAction::SteppingAction(EventAction *eventAction) : fEventAction(eventAction)
 {
   fRun = fEventAction->GetRun();
+  memset(fScatterProbability, 0, sizeof fScatterProbability);
+  memset(fScatterProcess, 0, sizeof fScatterProcess);
 }
 
 void SteppingAction::UserSteppingAction([[maybe_unused]] const G4Step *step)
 {
   fRun->AddStep(step);
+
+  G4Track *lp_track = step->GetTrack(), *ln_track;
+  if(lp_track->GetTrackID() == 1 && lp_track->GetPosition().getZ() >= fEventAction->GetScatterZ()) {
+    double r = G4UniformRand(), s = 0;
+    for(size_t i = 0; i < 2; ++i) {
+      s += fScatterProbability[i];
+      if(s <= r) continue;
+      double xs = fScatterProcess[i]->Scatter(lp_track, ln_track);
+      fRun->AddScatter(fScatterProbability[i], xs);
+      break;
+    }
+  }
+}
+
+void SteppingAction::SetMupTargetEnToLL(size_t index, double probability, const char *points_file)
+{
+  if(fScatterProbability[1 - index] + probability > 1) throw std::logic_error("probability sum exceeds 1");
+  fScatterProbability[index] = probability;
+  fScatterProcess[index] = new MupTargetEnToLL(11 + index * 2, points_file);
 }

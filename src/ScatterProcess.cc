@@ -148,6 +148,7 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
   const G4ThreeVector &position = lp_track->GetPosition();
   const G4TouchableHandle &handle = lp_track->GetTouchableHandle();
   G4double globalTime = lp_track->GetGlobalTime();
+  G4int parent_id = lp_track->GetTrackID();
   lp_track->SetTrackStatus(G4TrackStatus::fStopAndKill);
 
   // Create scattered tracks.
@@ -155,10 +156,13 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
   auto ln_particle = new G4DynamicParticle(ln_def, ln_out_p);
   lp_track = new G4Track(lp_particle, globalTime, position);
   ln_out_track = new G4Track(ln_particle, globalTime, position);
+  lp_track->SetTrackID(0x10001);
+  ln_out_track->SetTrackID(0x10002);
 
   // Register scattered tracks.
   G4TrackingManager *trackingManager = G4EventManager::GetEventManager()->GetTrackingManager();
   for(G4Track *track : {lp_track, ln_out_track}) {
+    track->SetParentID(parent_id);
     track->SetTouchableHandle(handle);
     trackingManager->ProcessOneTrack(track);
   }

@@ -27,10 +27,14 @@
 #include "EventAction.hh"
 #include "RunAction.hh"
 #include "Run.hh"
+#include "DetectorConstruction.hh"
+#include "G4RunManager.hh"
 
 EventAction::EventAction(RunAction *runAction) : fRunAction(runAction)
 {
   fRun = fRunAction->GetRun();
+  fDetectorConstruction = (DetectorConstruction *)
+    G4RunManager::GetRunManager()->GetUserDetectorConstruction();
 }
 
 EventAction::~EventAction()
@@ -40,7 +44,7 @@ EventAction::~EventAction()
 
 void EventAction::BeginOfEventAction([[maybe_unused]] const G4Event *event)
 {
-
+  fScatterZ = fDetectorConstruction->GetScatterZ();
 }
 
 void EventAction::EndOfEventAction([[maybe_unused]] const G4Event *event)

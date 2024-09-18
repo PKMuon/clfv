@@ -44,6 +44,7 @@ public:
   void FillAndReset();
   void AddTrack(const G4Track *);
   void AddStep(const G4Step *);
+  void AddScatter(double probability, double xs);
 
 private:
   class Manager;

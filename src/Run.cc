@@ -63,6 +63,7 @@ public:
   void Reset();
   void AddTrack(const G4Track *track);
   void AddStep(const G4Step *track);
+  void AddScatter(double probability, double xs);
   void SaveCuts();
 
 private:
@@ -71,6 +72,7 @@ private:
   TClonesArray Tracks;
   TClonesArray Cuts;
   Double_t EnergyDeposit, NonIonizingEnergyDeposit;
+  Double_t ScatterProbability, ScatterXS;
 };
 
 Run::Run()
@@ -120,7 +122,13 @@ void Run::AddStep(const G4Step *step)
   fManager->AddStep(step);
 }
 
-Run::Manager::Manager() : Tracks("Track"), Cuts("Cuts"), EnergyDeposit(0), NonIonizingEnergyDeposit(0)
+void Run::AddScatter(double probability, double xs)
+{
+  fManager->AddScatter(probability, xs);
+}
+
+Run::Manager::Manager() : Tracks("Track"), Cuts("Cuts"),
+  EnergyDeposit(0), NonIonizingEnergyDeposit(0), ScatterProbability(0), ScatterXS(0)
 {
   fFile = NULL;
   fCuts = NULL;
@@ -138,6 +146,8 @@ void Run::Manager::Branch(TTree *tree)
   tree->Branch("Tracks", &Tracks);
   tree->Branch("EnergyDeposit", &EnergyDeposit);
   tree->Branch("NonIonizingEnergyDeposit", &NonIonizingEnergyDeposit);
+  tree->Branch("ScatterProbability", &ScatterProbability);
+  tree->Branch("ScatterXS", &ScatterXS);
 
   fFile = tree->GetCurrentFile();
   fFile->cd();
@@ -147,24 +157,23 @@ void Run::Manager::Branch(TTree *tree)
 
 void Run::Manager::PreFill()
 {
-  Int_t n = Tracks.GetEntries();
-
-  // Inplace index sort.
-  for(Int_t i = 0; i < n; ++i) {
-    auto track = (Track *)Tracks[i];
-    while(track->Id - 1 != i) {
-      if(track->Id <= 0 || track->Id > n) {
-        throw std::runtime_error("invalid track ID: " + std::to_string(track->Id));
-      }
-      if(((Track *)Tracks[track->Id - 1])->Id == track->Id) {
-        throw std::runtime_error("duplicate track ID: " + std::to_string(track->Id));
-      }
-      TObject *object = track;
-      std::swap(object, Tracks[track->Id - 1]);
-      track = (Track *)object;
-    }
-    Tracks[i] = track;
-  }
+  //// Inplace index sort.
+  //Int_t n = Tracks.GetEntries();
+  //for(Int_t i = 0; i < n; ++i) {
+  //  auto track = (Track *)Tracks[i];
+  //  while(track->Id - 1 != i) {
+  //    if(track->Id <= 0 || track->Id > n) {
+  //      throw std::runtime_error("invalid track ID: " + std::to_string(track->Id));
+  //    }
+  //    if(((Track *)Tracks[track->Id - 1])->Id == track->Id) {
+  //      throw std::runtime_error("duplicate track ID: " + std::to_string(track->Id));
+  //    }
+  //    TObject *object = track;
+  //    std::swap(object, Tracks[track->Id - 1]);
+  //    track = (Track *)object;
+  //  }
+  //  Tracks[i] = track;
+  //}
 }
 
 void Run::Manager::Reset()
@@ -172,6 +181,8 @@ void Run::Manager::Reset()
   Tracks.Clear();
   EnergyDeposit = 0;
   NonIonizingEnergyDeposit = 0;
+  ScatterProbability = 0;
+  ScatterXS = 0;
 }
 
 void Run::Manager::AddTrack(const G4Track *track)
@@ -183,6 +194,12 @@ void Run::Manager::AddStep(const G4Step *step)
 {
   EnergyDeposit += step->GetTotalEnergyDeposit();
   NonIonizingEnergyDeposit += step->GetNonIonizingEnergyDeposit();
+}
+
+void Run::Manager::AddScatter(double probability, double xs)
+{
+  ScatterProbability = probability;
+  ScatterXS = xs;
 }
 
 void Run::Manager::SaveCuts()

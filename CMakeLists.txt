@@ -1,6 +1,6 @@
 #----------------------------------------------------------------------------
 # Setup the project
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.19)
 project(clfv)
 
 #----------------------------------------------------------------------------
@@ -27,15 +27,6 @@ include("${ROOT_DIR}/ROOTUseFile.cmake")   # ROOT6
 #
 include(${Geant4_USE_FILE})
 include(${ROOT_USE_FILE})
-
-#----------------------------------------------------------------------------
-# External PDG support
-#
-add_subdirectory(particle)
-include_directories(SYSTEM particle/include)
-link_directories(particle/lib)
-add_compile_definitions(PDG_PATH="${PROJECT_SOURCE_DIR}/particle/share/cache")
-add_compile_definitions(DATA_DIR="${PROJECT_SOURCE_DIR}/data")
 
 ##----------------------------------------------------------------------------
 ## Find yaml-cpp (required package)
@@ -74,18 +65,26 @@ endif()
 add_compile_options(-g -Wall -Wshadow -Wextra -Werror)
 
 #----------------------------------------------------------------------------
+# Process customized TObject derivates
+#
+add_custom_command(OUTPUT Object.cxx Object_rdict.pcm COMMAND rootcint -f
+Object.cxx ${PROJECT_SOURCE_DIR}/include/Object.hh ${PROJECT_SOURCE_DIR}/src/ObjectLinkDef.h
+DEPENDS include/Object.hh src/ObjectLinkDef.h
+IMPLICIT_DEPENDS include/Object.hh)
+
+#----------------------------------------------------------------------------
 # Locate sources and headers for this project
 #
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(include)
 include_directories(SYSTEM ${Geant4_INCLUDE_DIR} ${ROOT_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIR})
-file(GLOB sources CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/src/*.cc)
-file(GLOB headers CONFIGURE_DEPENDS ${PROJECT_SOURCE_DIR}/include/*.hh)
+file(GLOB sources CONFIGURE_DEPENDS src/*.cc)
+file(GLOB headers CONFIGURE_DEPENDS include/*.hh)
 
 #----------------------------------------------------------------------------
 # Add the executable, and link it to the Geant4 libraries
 #
-add_executable(clfv clfv.cc ${sources} ${headers})
-target_link_libraries(clfv particle ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${YAML_CPP_LIBRARIES})
+add_executable(clfv clfv.cc ${sources} ${PROJECT_BINARY_DIR}/Object.cxx ${headers})
+target_link_libraries(clfv ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${YAML_CPP_LIBRARIES})
 
 #----------------------------------------------------------------------------
 # Copy all scripts to the build directory, i.e. the directory in which we
@@ -95,5 +94,5 @@ target_link_libraries(clfv particle ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${YAML
 file(GLOB scripts CONFIGURE_DEPENDS run.sh *.mac)
 foreach(script ${scripts})
     get_filename_component(script ${script} NAME)
-    configure_file(${PROJECT_SOURCE_DIR}/${script} ${PROJECT_BINARY_DIR}/${script} COPYONLY)
+    configure_file(${script} ${script} COPYONLY)
 endforeach()
