@@ -26,8 +26,8 @@ public:
   double Scatter(G4Track *&lp_track, G4Track *&ln_out_track) const;
 
 private:
-  double e_mass, mu_mass, l_mass;
   G4ParticleDefinition *lp_def, *ln_def;
+  double e_mass, mu_mass, l_mass;
   std::vector<std::tuple<double, double, std::unique_ptr<TH1>>> points;  // (mup_energy, xs, lp_out_alpha)
 
   void LoadPoints(const char *points_file);

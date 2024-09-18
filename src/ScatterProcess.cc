@@ -7,7 +7,6 @@
 #include <G4EventManager.hh>
 #include <G4TrackingManager.hh>
 #include <Randomize.hh>
-#include <particle.h>
 #include <algorithm>
 #include <math.h>
 #include <TFile.h>
@@ -20,13 +19,12 @@
 
 MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
 {
-  ParticleDatabase db(PDG_PATH);
-  e_mass = (double)db.query(11, "mass") * MeV;
-  mu_mass = (double)db.query(13, "mass") * MeV;
-  l_mass = (double)db.query(l_pid, "mass") * MeV;
   G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
   lp_def = particleTable->FindParticle(-abs(l_pid));
   ln_def = particleTable->FindParticle(+abs(l_pid));
+  e_mass = particleTable->FindParticle(11)->GetPDGMass();
+  mu_mass = particleTable->FindParticle(13)->GetPDGMass();
+  l_mass = ln_def->GetPDGMass();
   LoadPoints(points_file);
 }
 
@@ -146,10 +144,11 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
   double xs = Scatter(lp_p, ln_out_p);
   if(xs == 0) return 0;
 
-  // Collect track information.
+  // Collect track information and kill the original track.
   const G4ThreeVector &position = lp_track->GetPosition();
   const G4TouchableHandle &handle = lp_track->GetTouchableHandle();
   G4double globalTime = lp_track->GetGlobalTime();
+  lp_track->SetTrackStatus(G4TrackStatus::fStopAndKill);
 
   // Create scattered tracks.
   auto lp_particle = new G4DynamicParticle(lp_def, lp_p);
@@ -164,7 +163,5 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
     trackingManager->ProcessOneTrack(track);
   }
 
-  // Kill the precious track.
-  lp_track->SetTrackStatus(G4TrackStatus::fStopAndKill);
   return xs;
 }
