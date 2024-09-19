@@ -1,6 +1,6 @@
 .DS_Store
 __pycache__/
-muemumu_example_*/
+*_example_*/
 CMakeCache.txt
 CMakeFiles
 cmake_install.cmake
