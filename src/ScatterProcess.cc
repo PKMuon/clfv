@@ -5,7 +5,7 @@
 #include <G4Track.hh>
 #include <G4DynamicParticle.hh>
 #include <G4EventManager.hh>
-#include <G4TrackingManager.hh>
+#include <G4StackManager.hh>
 #include <Randomize.hh>
 #include <algorithm>
 #include <math.h>
@@ -160,11 +160,11 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
   ln_out_track->SetTrackID(0x10002);
 
   // Register scattered tracks.
-  G4TrackingManager *trackingManager = G4EventManager::GetEventManager()->GetTrackingManager();
+  G4StackManager *stackManager = G4EventManager::GetEventManager()->GetStackManager();
   for(G4Track *track : {lp_track, ln_out_track}) {
     track->SetParentID(parent_id);
     track->SetTouchableHandle(handle);
-    trackingManager->ProcessOneTrack(track);
+    stackManager->PushOneTrack(track);
   }
 
   return xs;
