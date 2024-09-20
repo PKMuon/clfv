@@ -32,6 +32,7 @@
 #include "G4SystemOfUnits.hh"
 #include "G4NistManager.hh"
 #include "Randomize.hh"
+#include "G4UserLimits.hh"
 
 DetectorConstruction::DetectorConstruction()
 {
@@ -52,6 +53,7 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   auto world_s = new G4Box("world", fWorldX * 0.5, fWorldY * 0.5, fWorldZ * 0.5);
   auto world_l = new G4LogicalVolume(world_s, nist->FindOrBuildMaterial("G4_WATER"), "world");
   auto world_p = new G4PVPlacement(NULL, {}, world_l, "world", NULL, false, 0, true);
+  world_l->SetUserLimits(new G4UserLimits(fWorldZ * 0.02));
 
   return world_p;
 }

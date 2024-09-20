@@ -43,6 +43,7 @@ void SteppingAction::UserSteppingAction([[maybe_unused]] const G4Step *step)
   fRun->AddStep(step);
 
   G4Track *lp_track = step->GetTrack(), *ln_track;
+  //G4cout << "Step of track " << lp_track->GetTrackID() << ": " << lp_track->GetPosition().getZ() << G4endl;
   if(lp_track->GetTrackID() == 1 && lp_track->GetPosition().getZ() >= fEventAction->GetScatterZ()) {
     double r = G4UniformRand(), s = 0;
     for(size_t i = 0; i < 2; ++i) {
