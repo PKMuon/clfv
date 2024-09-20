@@ -4,7 +4,7 @@ import os
 import sys
 if len(sys.argv) == 1:
     import glob
-    for d in glob.glob('muemumu_example_*/'):
+    for d in glob.glob('mue*_example_*/'):
         sys.argv = [sys.argv[0], d + 'Events/run_01/unweighted_events.lhe.gz', d + 'Events/run_01/distributions.root']
         exec(open(sys.argv[0]).read())
     sys.exit()
@@ -32,8 +32,8 @@ reader = lhereader.LHEReader(INFILE)
 for event in reader:
     final_state_particles = [p for p in event.particles if p.status == 1]
     assert len(final_state_particles) == 2
-    l_pos = [p for p in final_state_particles if p.pdgid == -13][0]
-    l_neg = [p for p in final_state_particles if p.pdgid == +13][0]
+    l_pos = [p for p in final_state_particles if p.pdgid < 0][0]
+    l_neg = [p for p in final_state_particles if p.pdgid > 0][0]
     p4_pos = ROOT.TLorentzVector(l_pos.px, l_pos.py, l_pos.pz, l_pos.energy)
     p4_neg = ROOT.TLorentzVector(l_neg.px, l_neg.py, l_neg.pz, l_neg.energy)
     p4 = p4_pos + p4_neg
