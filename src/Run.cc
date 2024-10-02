@@ -1,210 +1,188 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
+// 2020.5.8 by siguang wang (siguang@pku.edu.cn)
 
 #include "Run.hh"
-#include "Object.hh"
-
-#include "G4ios.hh"
-#include "G4Threading.hh"
-#include "G4Track.hh"
-#include "G4Step.hh"
-#include "G4LogicalVolumeStore.hh"
+#include "RunMessenger.hh"
 #include <TFile.h>
 #include <TTree.h>
-#include <TClonesArray.h>
-#include <TROOT.h>
-#include <unistd.h>
 #include <filesystem>
-
-namespace fs = std::filesystem;
-
-namespace {
-
-struct ROOTInitializer {
-  ROOTInitializer() { ROOT::EnableThreadSafety(); }
-} rootInitializer [[maybe_unused]];
-
-}
-
-G4String Run::fDirName = "tree/" + std::to_string(getpid());
-G4String Run::fTreeName = "tree";
-G4String Run::fTreeTitle = "tree";
-
-class Run::Manager {
-public:
-  Manager();
-  ~Manager();
-
-  void Branch(TTree *tree);
-  void PreFill();
-  void Reset();
-  void AddTrack(const G4Track *track);
-  void AddStep(const G4Step *track);
-  void AddScatter(double probability, double xs);
-  void SaveCuts();
-
-private:
-  TFile *fFile;
-  TTree *fCuts;
-  TClonesArray Tracks;
-  TClonesArray Cuts;
-  Double_t EnergyDeposit, NonIonizingEnergyDeposit;
-  Double_t ScatterProbability, ScatterXS;
-};
+//#include <syscall.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 Run::Run()
 {
-  G4String filename = fDirName + "/" + std::to_string(G4Threading::G4GetThreadId()) + ".root";
-  auto parent = fs::path(filename.c_str()).parent_path();
-  if(!parent.empty()) fs::create_directories(parent);
-
-  fFile = TFile::Open(filename, "RECREATE");
-  if(!fFile->IsOpen()) {
-    G4cerr << "Error opening file " << filename << G4endl;
-    exit(1);
-  }
-  fTree = new TTree(fTreeName, fTreeTitle);
-  fManager = new Manager;
-  fManager->Branch(fTree);
+  fRunMessenger = new RunMessenger(this);
+  rootName = "CryMu.root";
+  _tree = NULL;
+  _file = NULL;
 }
 
 Run::~Run()
 {
-  delete fManager;
-  fFile->cd();
-  fTree->Write(NULL, fTree->kOverwrite);
-  fFile->Close();
+  SaveTree();
+  delete fRunMessenger;
+}
+
+Run *Run::GetInstance()
+{
+  static Run run;
+  return &run;
+}
+
+void Run::InitTree()
+{
+  using namespace std::filesystem;
+  auto dirpath = path(rootName.c_str()).parent_path();
+  if(!dirpath.empty()) create_directories(dirpath);
+
+  _file = new TFile(rootName, "RECREATE");
+  _tree = new TTree("T1", "Simple Out Tree");
+
+  _tree->Branch("PDG",            &PDG,            "PDG/I"             );
+  _tree->Branch("RpcTrkPx",       &RpcTrkPx,       "RpcTrkPx[16]/D"    );
+  _tree->Branch("RpcTrkPy",       &RpcTrkPy,       "RpcTrkPy[16]/D"    );
+  _tree->Branch("RpcTrkPz",       &RpcTrkPz,       "RpcTrkPz[16]/D"    );
+  _tree->Branch("RpcTrkE",        &RpcTrkE,        "RpcTrkE[16]/D"     );
+  _tree->Branch("RpcTrkEdep",     &RpcTrkEdep,     "RpcTrkEdep[16]/D"  );
+  _tree->Branch("RpcTrkX",        &RpcTrkX,        "RpcTrkX[16]/D"     );
+  _tree->Branch("RpcTrkY",        &RpcTrkY,        "RpcTrkY[16]/D"     );
+  _tree->Branch("RpcTrkZ",        &RpcTrkZ,        "RpcTrkZ[16]/D"     );
+  _tree->Branch("RpcTrkStatus",   &RpcTrkStatus,   "RpcTrkStatus[16]/O");
+  _tree->Branch("RpcTrkComplete", &RpcTrkComplete, "RpcTrkComplete/O"  );
+  _tree->Branch("RpcAllEdep",     &RpcAllEdep,     "RpcAllEdep[16]/D"  );
+  _tree->Branch("RpcAllX",        &RpcAllX,        "RpcAllX[16]/D"     );
+  _tree->Branch("RpcAllY",        &RpcAllY,        "RpcAllY[16]/D"     );
+  _tree->Branch("RpcAllZ",        &RpcAllZ,        "RpcAllZ[16]/D"     );
+  _tree->Branch("RpcAllN",        &RpcAllN,        "RpcAllN[16]/i"     );
+  _tree->Branch("RpcAllComplete", &RpcAllComplete, "RpcAllComplete/O"  );
+
+  Clear();
+}
+
+void Run::SaveTree()
+{
+  if(!_file) return;
+  _file->cd();
+  _tree->Write("T1", TObject::kOverwrite);
+  _file->Close();
+  _tree = NULL;
+  _file = NULL;
+}
+
+void Run::Fill()
+{
+  RpcTrkComplete = true;
+  for(int i = 0; i < 16; ++i) {
+    double Edep = RpcTrkEdep[i];
+    if(Edep) {
+      RpcTrkPx  [i] /= Edep;
+      RpcTrkPy  [i] /= Edep;
+      RpcTrkPz  [i] /= Edep;
+      RpcTrkE   [i] /= Edep;
+      RpcTrkX   [i] /= Edep;
+      RpcTrkY   [i] /= Edep;
+      RpcTrkZ   [i] /= Edep;
+    }
+    if(!RpcTrkStatus[i]) RpcTrkComplete = false;
+  }
+  RpcAllComplete = true;
+  for(int i = 0; i < 16; ++i) {
+    double Edep = RpcAllEdep[i];
+    if(Edep) {
+      RpcAllX   [i] /= Edep;
+      RpcAllY   [i] /= Edep;
+      RpcAllZ   [i] /= Edep;
+    }
+    RpcAllN[i] = RpcAllIds[i].size();
+    if(!RpcAllN[i]) RpcAllComplete = false;
+  }
+  _tree->Fill();
+  Clear();
 }
 
 void Run::AutoSave()
 {
-  fTree->AutoSave("SaveSelf, Overwrite");
-  fManager->SaveCuts();
+  _tree->AutoSave("SaveSelf Overwrite");
 }
 
-void Run::FillAndReset()
+void Run::AddRpcTrkInfo(int i, double Px, double Py, double Pz,
+    double E, double Edep, double X, double Y, double Z, int pdgCode)
 {
-  fManager->PreFill();
-  fTree->Fill();
-  fManager->Reset();
+  if(i < 0 || i >= 16) return;
+  RpcTrkPx    [i] += Px * Edep;
+  RpcTrkPy    [i] += Py * Edep;
+  RpcTrkPz    [i] += Pz * Edep;
+  RpcTrkE     [i] += E  * Edep;
+  RpcTrkEdep  [i] +=      Edep;
+  RpcTrkX     [i] += X  * Edep;
+  RpcTrkY     [i] += Y  * Edep;
+  RpcTrkZ     [i] += Z  * Edep;
+  RpcTrkStatus[i]  = true;
+  PDG              = pdgCode;
 }
 
-void Run::AddTrack(const G4Track *track)
+void Run::AddRpcAllInfo(int i, int id, double Edep, double X, double Y, double Z)
 {
-  fManager->AddTrack(track);
+  if(i < 0 || i >= 16) return;
+  if(id != 1) {  // not primary
+    auto [it, _] = RpcAllLayer.emplace(id, i);
+    if(it->second != i) return;  // not belong to this layer
+  }
+  RpcAllIds   [i].insert(id);
+  RpcAllEdep  [i] +=      Edep;
+  RpcAllX     [i] += X  * Edep;
+  RpcAllY     [i] += Y  * Edep;
+  RpcAllZ     [i] += Z  * Edep;
 }
 
-void Run::AddStep(const G4Step *step)
+void Run::Clear()
 {
-  fManager->AddStep(step);
+  for(int i = 0; i < 16; i++) {
+    RpcTrkPx    [i] = 0;
+    RpcTrkPy    [i] = 0;
+    RpcTrkPz    [i] = 0;
+    RpcTrkE     [i] = 0;
+    RpcTrkEdep  [i] = 0;
+    RpcTrkX     [i] = 0;
+    RpcTrkY     [i] = 0;
+    RpcTrkZ     [i] = 0;
+    RpcTrkStatus[i] = false;
+  }
+  RpcTrkComplete = false;
+  RpcAllLayer.clear();
+  for(int i = 0; i < 16; i++) {
+    RpcAllIds   [i].clear();
+    RpcAllEdep  [i] = 0;
+    RpcAllX     [i] = 0;
+    RpcAllY     [i] = 0;
+    RpcAllZ     [i] = 0;
+    RpcAllN     [i] = 0;
+  }
+  RpcAllComplete = false;
+  PDG = 0;
 }
 
-void Run::AddScatter(double probability, double xs)
+uint64_t Run::GetThreadId()
 {
-  fManager->AddScatter(probability, xs);
+#ifdef __APPLE__
+  uint64_t tid;
+  pthread_threadid_np(NULL, &tid);
+  return tid;
+#else  /* __APPLE__ */
+  int64_t tid = pthread_threadid_np(NULL, &tid);
+  if(tid < 0) {  // probably ENOSYS
+    perror("gettid");
+    exit(EXIT_FAILURE);
+  }
+  return tid;
+#endif  /* __APPLE__ */
 }
 
-Run::Manager::Manager() : Tracks("Track"), Cuts("Cuts"),
-  EnergyDeposit(0), NonIonizingEnergyDeposit(0), ScatterProbability(0), ScatterXS(0)
+uint64_t Run::GetSeed()
 {
-  fFile = NULL;
-  fCuts = NULL;
-}
-
-Run::Manager::~Manager()
-{
-  if(fFile == NULL) return;
-  fFile->cd();
-  fCuts->Write(NULL, fCuts->kOverwrite);
-}
-
-void Run::Manager::Branch(TTree *tree)
-{
-  tree->Branch("Tracks", &Tracks);
-  tree->Branch("EnergyDeposit", &EnergyDeposit);
-  tree->Branch("NonIonizingEnergyDeposit", &NonIonizingEnergyDeposit);
-  tree->Branch("ScatterProbability", &ScatterProbability);
-  tree->Branch("ScatterXS", &ScatterXS);
-
-  fFile = tree->GetCurrentFile();
-  fFile->cd();
-  fCuts = new TTree("cuts", "cuts");
-  fCuts->Branch("Cuts", &Cuts);
-}
-
-void Run::Manager::PreFill()
-{
-  //// Inplace index sort.
-  //Int_t n = Tracks.GetEntries();
-  //for(Int_t i = 0; i < n; ++i) {
-  //  auto track = (Track *)Tracks[i];
-  //  while(track->Id - 1 != i) {
-  //    if(track->Id <= 0 || track->Id > n) {
-  //      throw std::runtime_error("invalid track ID: " + std::to_string(track->Id));
-  //    }
-  //    if(((Track *)Tracks[track->Id - 1])->Id == track->Id) {
-  //      throw std::runtime_error("duplicate track ID: " + std::to_string(track->Id));
-  //    }
-  //    TObject *object = track;
-  //    std::swap(object, Tracks[track->Id - 1]);
-  //    track = (Track *)object;
-  //  }
-  //  Tracks[i] = track;
-  //}
-}
-
-void Run::Manager::Reset()
-{
-  Tracks.Clear();
-  EnergyDeposit = 0;
-  NonIonizingEnergyDeposit = 0;
-  ScatterProbability = 0;
-  ScatterXS = 0;
-}
-
-void Run::Manager::AddTrack(const G4Track *track)
-{
-  *(Track *)Tracks.ConstructedAt(Tracks.GetEntries()) = *track;
-}
-
-void Run::Manager::AddStep(const G4Step *step)
-{
-  EnergyDeposit += step->GetTotalEnergyDeposit();
-  NonIonizingEnergyDeposit += step->GetNonIonizingEnergyDeposit();
-}
-
-void Run::Manager::AddScatter(double probability, double xs)
-{
-  ScatterProbability = probability;
-  ScatterXS = xs;
-}
-
-void Run::Manager::SaveCuts()
-{
-  *(::Cuts *)Cuts.ConstructedAt(0) = *G4LogicalVolumeStore::GetInstance()->GetVolume("world");
-  fCuts->Fill();
-  fCuts->AutoSave("SaveSelf, Overwrite");
+  return std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::system_clock::now().time_since_epoch()
+  ).count() + GetThreadId();
 }
