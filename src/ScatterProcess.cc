@@ -13,10 +13,6 @@
 #include <TTree.h>
 #include <TH1.h>
 
-#ifndef PDG_PATH
-#define PDG_PATH  ""
-#endif  /* PDG_PATH */
-
 MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
 {
   G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
