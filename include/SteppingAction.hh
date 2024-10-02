@@ -23,34 +23,30 @@
 // * acceptance of all terms of the Geant4 Software license.          *
 // ********************************************************************
 //
+// Previous authors: G. Guerrieri, S. Guatelli and M. G. Pia, INFN Genova, Italy
+// Authors (since 2007): S. Guatelli,University of Wollongong, Australia
+// Contributions by F. Ambroglini INFN Perugia, Italy
+//
 
 #ifndef SteppingAction_h
 #define SteppingAction_h 1
 
 #include "G4UserSteppingAction.hh"
 #include "globals.hh"
+#include <vector>
 
-class MupTargetEnToLL;
-class EventAction;
-class Run;
+class G4LogicalVolume;
 
-class SteppingAction : public G4UserSteppingAction {
-public:
-  SteppingAction(EventAction *eventAction);
-  ~SteppingAction() override = default;
+class SteppingAction : public G4UserSteppingAction
+{
+  public:
+    SteppingAction();
+   ~SteppingAction();
+    virtual void UserSteppingAction(const G4Step*) override;
 
-  void UserSteppingAction(const G4Step *) override;
-
-  void SetMupTargetEnToEE(double probability, const char *points_file) { SetMupTargetEnToLL(0, probability, points_file); }
-  void SetMupTargetEnToMuMu(double probability, const char *points_file) { SetMupTargetEnToLL(1, probability, points_file); }
-
-private:
-  [[maybe_unused]] EventAction *fEventAction;
-  [[maybe_unused]] Run *fRun;
-  G4double fScatterProbability[2];  // e, mu
-  MupTargetEnToLL *fScatterProcess[2];  // e, mu
-
-  void SetMupTargetEnToLL(size_t index, double probability, const char *points_file);
+   private:
+    std::vector<G4double> fScoringMaxZs;
+    G4double fScoringHalfX, fScoringHalfY, fScoringZ;
 };
 
 #endif

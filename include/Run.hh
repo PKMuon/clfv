@@ -1,61 +1,69 @@
-//
-// ********************************************************************
-// * License and Disclaimer                                           *
-// *                                                                  *
-// * The  Geant4 software  is  copyright of the Copyright Holders  of *
-// * the Geant4 Collaboration.  It is provided  under  the terms  and *
-// * conditions of the Geant4 Software License,  included in the file *
-// * LICENSE and available at  http://cern.ch/geant4/license .  These *
-// * include a list of copyright holders.                             *
-// *                                                                  *
-// * Neither the authors of this software system, nor their employing *
-// * institutes,nor the agencies providing financial support for this *
-// * work  make  any representation or  warranty, express or implied, *
-// * regarding  this  software system or assume any liability for its *
-// * use.  Please see the license in the file  LICENSE  and URL above *
-// * for the full disclaimer and the limitation of liability.         *
-// *                                                                  *
-// * This  code  implementation is the result of  the  scientific and *
-// * technical work of the GEANT4 collaboration.                      *
-// * By using,  copying,  modifying or  distributing the software (or *
-// * any work based  on the software)  you  agree  to acknowledge its *
-// * use  in  resulting  scientific  publications,  and indicate your *
-// * acceptance of all terms of the Geant4 Software license.          *
-// ********************************************************************
-//
+// Origin: 2020.5.8 by Siguang WANG (siguang@pku.edu.cn)
 
-#ifndef Run_h
-#define Run_h 1
+#ifndef GEANT4_INTRODUCTION_RUN_HH
+#define GEANT4_INTRODUCTION_RUN_HH 1
 
 #include "globals.hh"
 #include <Rtypes.h>
+#include <stdint.h>
+#include <unordered_set>
+#include <unordered_map>
 
 class TFile;
 class TTree;
-class G4Track;
-class G4Step;
+
+class RunMessenger;
 
 class Run {
 public:
-  Run();
-  virtual ~Run();
+  static Run *GetInstance();
+  static uint64_t GetThreadId();
+  static uint64_t GetSeed();
 
+  void SetRootName(G4String name) { rootName = name; }
+
+  void InitTree();
+  void SaveTree();
+  void Fill();
   void AutoSave();
-  void FillAndReset();
-  void AddTrack(const G4Track *);
-  void AddStep(const G4Step *);
-  void AddScatter(double probability, double xs);
+
+  void AddRpcTrkInfo(int i, double Px, double Py, double Pz, double E,
+      double Edep, double X, double Y, double Z, int pdgCode);
+  void AddRpcAllInfo(int i, int id, double Edep, double X, double Y, double Z);
 
 private:
-  class Manager;
-  Manager *fManager;
+  Run();
+  ~Run();
 
-protected:
-  static G4String fDirName;
-  static G4String fTreeName;
-  static G4String fTreeTitle;
-  TFile *fFile;
-  TTree *fTree;
+  RunMessenger *fRunMessenger;
+  G4String rootName;
+  TTree *_tree;
+  TFile *_file;
+
+  // Altered by other routines.
+  Double_t RpcTrkPx[16];
+  Double_t RpcTrkPy[16];
+  Double_t RpcTrkPz[16];
+  Double_t RpcTrkE[16];
+  Double_t RpcTrkEdep[16];
+  Double_t RpcTrkX[16];
+  Double_t RpcTrkY[16];
+  Double_t RpcTrkZ[16];
+  bool RpcTrkStatus[16];
+  std::unordered_map<int, int> RpcAllLayer;
+  std::unordered_set<int> RpcAllIds[16];
+  Double_t RpcAllEdep[16];
+  Double_t RpcAllX[16];
+  Double_t RpcAllY[16];
+  Double_t RpcAllZ[16];
+  Int_t PDG;
+
+  // Mantained by us.
+  Bool_t RpcTrkComplete;
+  UInt_t RpcAllN[16];
+  Bool_t RpcAllComplete;
+
+  void Clear();
 };
 
-#endif
+#endif  // GEANT4_INTRODUCTION_RUN_H
