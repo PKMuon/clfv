@@ -37,7 +37,6 @@
 #include "G4LogicalVolumeStore.hh"
 #include "G4Step.hh"
 #include "G4Threading.hh"
-#include "G4Track.hh"
 #include "G4ios.hh"
 #include "Object.hh"
 
@@ -65,7 +64,7 @@ public:
   void Reset();
   void AddTrack(const G4Track *track);
   void AddStep(const G4Step *track);
-  void AddScatter(double probability, double xs);
+  void AddScatter(const G4Track *muon, const G4DynamicParticle *lp, const G4DynamicParticle *ln);
   void SaveCuts();
 
 private:
@@ -73,8 +72,8 @@ private:
   TTree *fCuts;
   TClonesArray Tracks;
   TClonesArray Cuts;
+  TClonesArray Scatters;
   Double_t EnergyDeposit, NonIonizingEnergyDeposit;
-  Double_t ScatterProbability, ScatterXS;
 };
 
 Run::Run()
@@ -118,10 +117,13 @@ void Run::AddTrack(const G4Track *track) { fManager->AddTrack(track); }
 
 void Run::AddStep(const G4Step *step) { fManager->AddStep(step); }
 
-void Run::AddScatter(double probability, double xs) { fManager->AddScatter(probability, xs); }
+void Run::AddScatter(const G4Track *muon, const G4DynamicParticle *lp, const G4DynamicParticle *ln)
+{
+  return fManager->AddScatter(muon, lp, ln);
+}
 
 Run::Manager::Manager()
-    : Tracks("Track"), Cuts("Cuts"), EnergyDeposit(0), NonIonizingEnergyDeposit(0), ScatterProbability(0), ScatterXS(0)
+    : Tracks("Track"), Cuts("Cuts"), Scatters("Scatter"), EnergyDeposit(0), NonIonizingEnergyDeposit(0)
 {
   fFile = NULL;
   fCuts = NULL;
@@ -137,10 +139,9 @@ Run::Manager::~Manager()
 void Run::Manager::Branch(TTree *tree)
 {
   tree->Branch("Tracks", &Tracks);
+  tree->Branch("Scatters", &Scatters);
   tree->Branch("EnergyDeposit", &EnergyDeposit);
   tree->Branch("NonIonizingEnergyDeposit", &NonIonizingEnergyDeposit);
-  tree->Branch("ScatterProbability", &ScatterProbability);
-  tree->Branch("ScatterXS", &ScatterXS);
 
   fFile = tree->GetCurrentFile();
   fFile->cd();
@@ -150,32 +151,20 @@ void Run::Manager::Branch(TTree *tree)
 
 void Run::Manager::PreFill()
 {
-  //// Inplace index sort.
-  //Int_t n = Tracks.GetEntries();
-  //for(Int_t i = 0; i < n; ++i) {
-  //  auto track = (Track *)Tracks[i];
-  //  while(track->Id - 1 != i) {
-  //    if(track->Id <= 0 || track->Id > n) {
-  //      throw std::runtime_error("invalid track ID: " + std::to_string(track->Id));
-  //    }
-  //    if(((Track *)Tracks[track->Id - 1])->Id == track->Id) {
-  //      throw std::runtime_error("duplicate track ID: " + std::to_string(track->Id));
-  //    }
-  //    TObject *object = track;
-  //    std::swap(object, Tracks[track->Id - 1]);
-  //    track = (Track *)object;
-  //  }
-  //  Tracks[i] = track;
-  //}
+  // Sort the tracks by ID.
+  std::vector<Track *> tracks;
+  tracks.resize(Tracks.GetEntries());
+  for(size_t i = 0; i < tracks.size(); ++i) tracks[i] = (Track *)Tracks[i];
+  sort(tracks.begin(), tracks.end(), [](Track *a, Track *b) { return a->Id < b->Id; });
+  for(size_t i = 0; i < tracks.size(); ++i) Tracks[i] = tracks[i];
 }
 
 void Run::Manager::Reset()
 {
   Tracks.Clear();
+  Scatters.Clear();
   EnergyDeposit = 0;
   NonIonizingEnergyDeposit = 0;
-  ScatterProbability = 0;
-  ScatterXS = 0;
 }
 
 void Run::Manager::AddTrack(const G4Track *track) { *(Track *)Tracks.ConstructedAt(Tracks.GetEntries()) = *track; }
@@ -186,10 +175,9 @@ void Run::Manager::AddStep(const G4Step *step)
   NonIonizingEnergyDeposit += step->GetNonIonizingEnergyDeposit();
 }
 
-void Run::Manager::AddScatter(double probability, double xs)
+void Run::Manager::AddScatter(const G4Track *muon, const G4DynamicParticle *lp, const G4DynamicParticle *ln)
 {
-  ScatterProbability = probability;
-  ScatterXS = xs;
+  *(Scatter *)Scatters.ConstructedAt(Scatters.GetEntries()) = { muon, lp, ln };
 }
 
 void Run::Manager::SaveCuts()

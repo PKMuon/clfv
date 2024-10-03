@@ -34,6 +34,7 @@
 class TFile;
 class TTree;
 class G4Track;
+class G4DynamicParticle;
 class G4Step;
 
 class Run {
@@ -45,7 +46,7 @@ public:
   void FillAndReset();
   void AddTrack(const G4Track *);
   void AddStep(const G4Step *);
-  void AddScatter(double probability, double xs);
+  void AddScatter(const G4Track *muon, const G4DynamicParticle *lp, const G4DynamicParticle *ln);
 
 private:
   class Manager;
