@@ -28,24 +28,21 @@
 
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
+#include "G4NistManager.hh"
 #include "G4PVPlacement.hh"
 #include "G4SystemOfUnits.hh"
-#include "G4NistManager.hh"
-#include "Randomize.hh"
 #include "G4UserLimits.hh"
+#include "Randomize.hh"
 
 DetectorConstruction::DetectorConstruction()
 {
   fWorldX = 10 * cm;
   fWorldY = 10 * cm;
   fWorldZ = 10 * cm;
-  fSourcePosition = {0, 0, -fWorldZ * 0.5};
+  fSourcePosition = { 0, 0, -fWorldZ * 0.5 };
 }
 
-DetectorConstruction::~DetectorConstruction()
-{
-
-}
+DetectorConstruction::~DetectorConstruction() { }
 
 G4VPhysicalVolume *DetectorConstruction::Construct()
 {
@@ -58,7 +55,4 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
   return world_p;
 }
 
-G4double DetectorConstruction::GetScatterZ() const
-{
-  return (0.5 - G4UniformRand()) * fWorldZ;
-}
+G4double DetectorConstruction::GetScatterZ() const { return (0.5 - G4UniformRand()) * fWorldZ; }

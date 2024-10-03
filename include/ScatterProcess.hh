@@ -1,10 +1,11 @@
 #pragma once
-#include <G4ThreeVector.hh>
-#include <vector>
-#include <utility>
-#include <tuple>
-#include <memory>
 #include <TH1.h>
+
+#include <G4ThreeVector.hh>
+#include <memory>
+#include <tuple>
+#include <utility>
+#include <vector>
 
 class G4Track;
 class G4ParticleDefinition;

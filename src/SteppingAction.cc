@@ -25,11 +25,12 @@
 //
 
 #include "SteppingAction.hh"
+
 #include "EventAction.hh"
-#include "Run.hh"
-#include "ScatterProcess.hh"
 #include "G4Step.hh"
 #include "Randomize.hh"
+#include "Run.hh"
+#include "ScatterProcess.hh"
 
 SteppingAction::SteppingAction(EventAction *eventAction) : fEventAction(eventAction)
 {

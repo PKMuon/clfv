@@ -30,7 +30,7 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class Track+;
-#pragma link C++ class Cuts+;
+#pragma link C++ class Track + ;
+#pragma link C++ class Cuts + ;
 
 #endif

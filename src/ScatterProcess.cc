@@ -1,17 +1,19 @@
 #include "ScatterProcess.hh"
-#include <G4ios.hh>
-#include <G4ParticleTable.hh>
-#include <G4SystemOfUnits.hh>
-#include <G4Track.hh>
+
+#include <TFile.h>
+#include <TH1.h>
+#include <TTree.h>
+#include <math.h>
+
 #include <G4DynamicParticle.hh>
 #include <G4EventManager.hh>
+#include <G4ParticleTable.hh>
 #include <G4StackManager.hh>
+#include <G4SystemOfUnits.hh>
+#include <G4Track.hh>
+#include <G4ios.hh>
 #include <Randomize.hh>
 #include <algorithm>
-#include <math.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TH1.h>
 
 MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
 {
@@ -24,18 +26,19 @@ MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
   LoadPoints(points_file);
 }
 
-void MupTargetEnToLL::Scatter(double mup_energy, double lp_out_alpha, G4ThreeVector &lp_out_p, G4ThreeVector &ln_out_p) const
+void MupTargetEnToLL::Scatter(
+    double mup_energy, double lp_out_alpha, G4ThreeVector &lp_out_p, G4ThreeVector &ln_out_p) const
 {
   // Compute COM energy
-  double e2_com = mu_mass*mu_mass + 2*mup_energy*e_mass + e_mass*e_mass, e_com = sqrt(e2_com);
+  double e2_com = mu_mass * mu_mass + 2 * mup_energy * e_mass + e_mass * e_mass, e_com = sqrt(e2_com);
 
   // Compute Lorentz boost.
-  double e = mup_energy + e_mass, e2 = e*e;
+  double e = mup_energy + e_mass, e2 = e * e;
   double p2 = e2 - e2_com, p = sqrt(p2);
   double gamma = e / e_com, beta = p / e;
 
   // Compute l+ momentum in COM frame.
-  double lp_p_com = sqrt(e2_com / 4 - l_mass*l_mass);
+  double lp_p_com = sqrt(e2_com / 4 - l_mass * l_mass);
 
   // Write results via alpha.
   double lp_out_pt = lp_p_com * sin(lp_out_alpha);
@@ -55,7 +58,7 @@ void MupTargetEnToLL::Scatter(G4ThreeVector &lp_p, double lp_out_alpha, G4ThreeV
   double phi = lp_p.getPhi();
 
   // Calculate results in the beam-z frame.
-  double mup_energy = sqrt(lp_p.mag2() + mu_mass*mu_mass);
+  double mup_energy = sqrt(lp_p.mag2() + mu_mass * mu_mass);
   Scatter(mup_energy, lp_out_alpha, lp_p, ln_out_p);
 
   // Rotate back to the original frame.
@@ -67,10 +70,10 @@ void MupTargetEnToLL::Scatter(G4ThreeVector &lp_p, double lp_out_alpha, G4ThreeV
 
 double MupTargetEnToLL::Scatter(G4ThreeVector &lp_p, G4ThreeVector &ln_out_p) const
 {
-  double mup_energy = sqrt(lp_p.mag2() + mu_mass*mu_mass);
+  double mup_energy = sqrt(lp_p.mag2() + mu_mass * mu_mass);
   auto [xs, lp_out_alpha] = Sample(mup_energy);
   if(xs == 0) {
-    ln_out_p = {NAN, NAN, NAN};
+    ln_out_p = { NAN, NAN, NAN };
     return 0;
   }
   Scatter(lp_p, lp_out_alpha, ln_out_p);
@@ -83,7 +86,8 @@ void MupTargetEnToLL::LoadPoints(const char *points_file)
 
   G4cout << "Loading points from " << points_file << G4endl;
   auto file = TFile::Open(points_file);
-  if(!file->IsOpen()) G4Exception("MupTargetEnToLL::LoadPoints", "FileOpenError", FatalException, "Failed to open points file.");
+  if(!file->IsOpen())
+    G4Exception("MupTargetEnToLL::LoadPoints", "FileOpenError", FatalException, "Failed to open points file.");
   auto tree = (TTree *)file->Get("ki_points");
   if(!tree) G4Exception("MupTargetEnToLL::LoadPoints", "TreeGetError", FatalException, "Failed to get points tree.");
 
@@ -116,8 +120,9 @@ static std::pair<double, double> linear_interp_weights(double x1, double x2, dou
 std::pair<double, double> MupTargetEnToLL::Sample(double mup_energy) const
 {
   // Locate end points.
-  auto right = std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
-  if(right == points.begin() || right == points.end()) return {0, NAN};
+  auto right =
+      std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
+  if(right == points.begin() || right == points.end()) return { 0, NAN };
   auto left = prev(right);
   auto &[l_mup_energy, l_xs, l_lp_out_alpha] = *left;
   auto &[r_mup_energy, r_xs, r_rp_out_arpha] = *right;
@@ -130,7 +135,7 @@ std::pair<double, double> MupTargetEnToLL::Sample(double mup_energy) const
   auto &lp_out_alpha_hist = G4UniformRand() < l_weight ? l_lp_out_alpha : r_rp_out_arpha;
   double lp_out_alpha = lp_out_alpha_hist->GetRandom();
 
-  return {xs, lp_out_alpha};
+  return { xs, lp_out_alpha };
 }
 
 double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) const
@@ -157,7 +162,7 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
 
   // Register scattered tracks.
   G4StackManager *stackManager = G4EventManager::GetEventManager()->GetStackManager();
-  for(G4Track *track : {lp_track, ln_out_track}) {
+  for(G4Track *track : { lp_track, ln_out_track }) {
     track->SetParentID(parent_id);
     track->SetTouchableHandle(handle);
     stackManager->PushOneTrack(track);

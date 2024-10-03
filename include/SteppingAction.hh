@@ -41,13 +41,20 @@ public:
 
   void UserSteppingAction(const G4Step *) override;
 
-  void SetMupTargetEnToEE(double probability, const char *points_file) { SetMupTargetEnToLL(0, probability, points_file); }
-  void SetMupTargetEnToMuMu(double probability, const char *points_file) { SetMupTargetEnToLL(1, probability, points_file); }
+  void SetMupTargetEnToEE(double probability, const char *points_file)
+  {
+    SetMupTargetEnToLL(0, probability, points_file);
+  }
+
+  void SetMupTargetEnToMuMu(double probability, const char *points_file)
+  {
+    SetMupTargetEnToLL(1, probability, points_file);
+  }
 
 private:
   [[maybe_unused]] EventAction *fEventAction;
   [[maybe_unused]] Run *fRun;
-  G4double fScatterProbability[2];  // e, mu
+  G4double fScatterProbability[2];      // e, mu
   MupTargetEnToLL *fScatterProcess[2];  // e, mu
 
   void SetMupTargetEnToLL(size_t index, double probability, const char *points_file);

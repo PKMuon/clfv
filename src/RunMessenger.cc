@@ -25,14 +25,14 @@
 //
 
 #include "RunMessenger.hh"
-#include "PrimaryGeneratorAction.hh"
-#include "SteppingAction.hh"
 
 #include "G4RunManager.hh"
-#include "G4UIdirectory.hh"
-#include "G4UIcommand.hh"
-#include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4Tokenizer.hh"
+#include "G4UIcmdWithADoubleAndUnit.hh"
+#include "G4UIcommand.hh"
+#include "G4UIdirectory.hh"
+#include "PrimaryGeneratorAction.hh"
+#include "SteppingAction.hh"
 
 class RunMessenger::Driver {
 public:
@@ -49,27 +49,16 @@ private:
   G4UIcmdWithADoubleAndUnit *fSetTotalEnergyCmd;
 };
 
-RunMessenger::RunMessenger()
-{
-  fDriver = new Driver(this);
-}
+RunMessenger::RunMessenger() { fDriver = new Driver(this); }
 
-RunMessenger::~RunMessenger()
-{
-  delete fDriver;
-}
+RunMessenger::~RunMessenger() { delete fDriver; }
 
-void RunMessenger::SetNewValue(G4UIcommand *cmd, G4String val)
-{
-  fDriver->SetNewValue(cmd, val);
-}
+void RunMessenger::SetNewValue(G4UIcommand *cmd, G4String val) { fDriver->SetNewValue(cmd, val); }
 
 RunMessenger::Driver::Driver(RunMessenger *messenger)
 {
-  fPrimaryGeneratorAction = (PrimaryGeneratorAction *)
-    G4RunManager::GetRunManager()->GetUserPrimaryGeneratorAction();
-  fSteppingAction = (SteppingAction *)
-    G4RunManager::GetRunManager()->GetUserSteppingAction();
+  fPrimaryGeneratorAction = (PrimaryGeneratorAction *)G4RunManager::GetRunManager()->GetUserPrimaryGeneratorAction();
+  fSteppingAction = (SteppingAction *)G4RunManager::GetRunManager()->GetUserSteppingAction();
 
   fScatterDir = new G4UIdirectory("/scatter");
   fScatterDir->SetGuidance("Control scattering processes.");
@@ -112,7 +101,8 @@ void RunMessenger::Driver::SetNewValue(G4UIcommand *cmd, G4String val)
     G4String probability_s = next();
     G4String points_file = next();
     G4String trailing = next();
-    if(probability_s.empty() || points_file.empty() || !trailing.empty()) throw std::runtime_error("expect 2 arguments");
+    if(probability_s.empty() || points_file.empty() || !trailing.empty())
+      throw std::runtime_error("expect 2 arguments");
     G4double probability = std::stod(probability_s);
     if(cmd == fSetMupTargetEnToEECmd) {
       fSteppingAction->SetMupTargetEnToEE(probability, points_file);
