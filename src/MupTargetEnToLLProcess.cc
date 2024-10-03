@@ -115,6 +115,7 @@ G4double MupTargetEnToLLProcess::MinPrimaryEnergy(const G4ParticleDefinition *de
 void MupTargetEnToLLProcess::Configure(G4int lPid, G4String pointsFile, G4double xssf)
 {
   fRun = ((RunAction *)G4RunManager::GetRunManager()->GetUserRunAction())->GetRun();
+  delete fMupTargetEnToLL;
   fMupTargetEnToLL = new MupTargetEnToLL(lPid, pointsFile);
   fLpDefinition = G4ParticleTable::GetParticleTable()->FindParticle(-abs(lPid));
   fLnDefinition = G4ParticleTable::GetParticleTable()->FindParticle(+abs(lPid));

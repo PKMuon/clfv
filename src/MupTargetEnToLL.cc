@@ -5,12 +5,8 @@
 #include <TTree.h>
 #include <math.h>
 
-#include <G4DynamicParticle.hh>
-#include <G4EventManager.hh>
 #include <G4ParticleTable.hh>
-#include <G4StackManager.hh>
 #include <G4SystemOfUnits.hh>
-#include <G4Track.hh>
 #include <G4ios.hh>
 #include <Randomize.hh>
 #include <algorithm>
