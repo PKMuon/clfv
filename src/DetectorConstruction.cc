@@ -54,5 +54,3 @@ G4VPhysicalVolume *DetectorConstruction::Construct()
 
   return world_p;
 }
-
-G4double DetectorConstruction::GetScatterZ() const { return (0.5 - G4UniformRand()) * fWorldZ; }

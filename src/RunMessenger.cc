@@ -101,13 +101,14 @@ void RunMessenger::Driver::SetNewValue(G4UIcommand *cmd, G4String val)
     G4String probability_s = next();
     G4String points_file = next();
     G4String trailing = next();
-    if(probability_s.empty() || points_file.empty() || !trailing.empty())
+    if(probability_s.empty() || points_file.empty() || !trailing.empty()) {
       throw std::runtime_error("expect 2 arguments");
-    G4double probability = std::stod(probability_s);
+    }
+    //G4double probability = std::stod(probability_s);
     if(cmd == fSetMupTargetEnToEECmd) {
-      fSteppingAction->SetMupTargetEnToEE(probability, points_file);
+      // [TODO]
     } else {
-      fSteppingAction->SetMupTargetEnToMuMu(probability, points_file);
+      // [TODO]
     }
   }
 }

@@ -1,4 +1,4 @@
-#include "ScatterProcess.hh"
+#include "MupTargetEnToLL.hh"
 
 #include <TFile.h>
 #include <TH1.h>
@@ -145,12 +145,11 @@ double MupTargetEnToLL::Scatter(G4Track *&lp_track, G4Track *&ln_out_track) cons
   double xs = Scatter(lp_p, ln_out_p);
   if(xs == 0) return 0;
 
-  // Collect track information and kill the original track.
+  // Collect track information.
   const G4ThreeVector &position = lp_track->GetPosition();
   const G4TouchableHandle &handle = lp_track->GetTouchableHandle();
   G4double globalTime = lp_track->GetGlobalTime();
   G4int parent_id = lp_track->GetTrackID();
-  lp_track->SetTrackStatus(G4TrackStatus::fStopAndKill);
 
   // Create scattered tracks.
   auto lp_particle = new G4DynamicParticle(lp_def, lp_p);

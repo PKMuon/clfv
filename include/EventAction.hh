@@ -32,7 +32,6 @@
 
 class Run;
 class RunAction;
-class DetectorConstruction;
 
 class EventAction : public G4UserEventAction {
 public:
@@ -43,13 +42,10 @@ public:
   void EndOfEventAction(const G4Event *event) override;
 
   Run *GetRun() { return fRun; }
-  G4double GetScatterZ() const { return fScatterZ; };
 
 private:
   [[maybe_unused]] RunAction *fRunAction;
   [[maybe_unused]] Run *fRun;
-  DetectorConstruction *fDetectorConstruction;
-  G4double fScatterZ;
 };
 
 #endif
