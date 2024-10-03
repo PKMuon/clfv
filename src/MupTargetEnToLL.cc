@@ -15,6 +15,8 @@
 #include <Randomize.hh>
 #include <algorithm>
 
+static G4double pb = 1e-12 * 1e-24 * cm2;
+
 MupTargetEnToLL::MupTargetEnToLL(int l_pid, const char *points_file)
 {
   G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
@@ -99,7 +101,7 @@ void MupTargetEnToLL::LoadPoints(const char *points_file)
   for(ientry = 0; tree->GetEntry(ientry); ++ientry) {
     auto lp_out_alpha_clone = (TH1 *)lp_out_alpha->Clone();
     lp_out_alpha_clone->SetDirectory(nullptr);
-    points.emplace_back(mup_energy * GeV, xs, lp_out_alpha_clone);
+    points.emplace_back(mup_energy * GeV, xs * pb, lp_out_alpha_clone);
   }
   G4cout << "Loaded " << ientry << " points" << G4endl;
   std::sort(points.begin(), points.end());
@@ -129,10 +131,7 @@ double MupTargetEnToLL::CrossSection(double mup_energy) const
   return l_weight * l_xs + r_weight * r_xs;
 }
 
-double MupTargetEnToLL::MinPrimaryEnergy() const
-{
-  return points.empty() ? INFINITY : std::get<0>(points[0]);
-}
+double MupTargetEnToLL::MinPrimaryEnergy() const { return points.empty() ? INFINITY : std::get<0>(points[0]); }
 
 std::pair<double, double> MupTargetEnToLL::Sample(double mup_energy) const
 {

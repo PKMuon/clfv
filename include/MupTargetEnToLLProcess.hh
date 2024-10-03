@@ -19,6 +19,7 @@ public:
   G4double MinPrimaryEnergy(const G4ParticleDefinition *, const G4Material *) override;
 
   void Configure(G4int lPid, G4String pointsFile, G4double xssf = 1.0);
+  G4int GetLPid() const;
 
 protected:
   G4double GetMeanFreePath(const G4Track &aTrack, G4double previousStepSize, G4ForceCondition *condition) override;

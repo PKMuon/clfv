@@ -9,7 +9,7 @@
 #
 /gun/particle mu+
 /gun/totalEnergy 33.6 GeV
-/scatter/mupTargetEnToLL 13 ../data/muemumu_ki_2.200000000000000011e-01.root 100.0
+/scatter/mupTargetEnToLL 13 ../data/muemumu_ki_2.200000000000000011e-01.root 1000.0
 #/run/setCut 0.7 mm
 /run/printProgress 10000
 /run/beamOn 1000000
