@@ -48,8 +48,8 @@ G4VParticleChange *MupTargetEnToLLProcess::PostStepDoIt(const G4Track &track, co
 {
   //if(GetLPid()) G4cout << __FUNCTION__ << "(" << GetLPid() << ", " << track.GetTrackID() << ")" << G4endl;
   //bool changed = false;
-  G4ParticleChange *change = new G4ParticleChange;
-  change->Initialize(track);
+  thread_local G4ParticleChange change;
+  change.Initialize(track);
   do {
     if(!fMupTargetEnToLL) break;
     if(track.GetParticleDefinition()->GetPDGEncoding() != -13) break;
@@ -71,17 +71,17 @@ G4VParticleChange *MupTargetEnToLLProcess::PostStepDoIt(const G4Track &track, co
     auto ln = new G4DynamicParticle(fLnDefinition, lnMomentum);
     fRun->AddScatter(&track, lp, ln);
 
-    change->ProposeEnergy(0);
-    change->ProposeVelocity(0);
-    change->ProposeTrackStatus(fStopAndKill);
-    change->AddSecondary(lp, track.GetGlobalTime(), true);
-    change->AddSecondary(ln, track.GetGlobalTime(), true);
+    change.ProposeEnergy(0);
+    change.ProposeVelocity(0);
+    change.ProposeTrackStatus(fStopAndKill);
+    change.AddSecondary(lp, track.GetGlobalTime(), true);
+    change.AddSecondary(ln, track.GetGlobalTime(), true);
   } while(0);
   //if(GetLPid()) {
   //  G4cout << __FUNCTION__ << "(" << GetLPid() << ", " << track.GetTrackID() << ") -> " << std::boolalpha << changed
   //         << std::noboolalpha << G4endl;
   //}
-  return change;
+  return &change;
 }
 
 G4double MupTargetEnToLLProcess::GetCrossSection(const G4double energy, const G4MaterialCutsCouple *couple)
