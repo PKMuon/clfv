@@ -32,12 +32,7 @@ G4double MupTargetEnToLLProcess::PostStepGetPhysicalInteractionLength(
     const G4Track &track, G4double previousStepSize, G4ForceCondition *condition)
 {
   //if(GetLPid()) G4cout << __FUNCTION__ << "(" << GetLPid() << ", " << track.GetTrackID() << ")" << G4endl;
-  G4double stepLength = INFINITY;
-  if(!fMupTargetEnToLL) {
-    *condition = InActivated;
-  } else {
-    stepLength = GetMeanFreePath(track, previousStepSize, condition) * 0.001;
-  }
+  G4double stepLength = GetMeanFreePath(track, previousStepSize, condition) * 0.001;
   //if(GetLPid()) {
   //  G4cout << __FUNCTION__ << "(" << GetLPid() << ", " << track.GetTrackID() << ") -> " << stepLength << G4endl;
   //}
@@ -129,10 +124,14 @@ G4double MupTargetEnToLLProcess::GetMeanFreePath(
 {
   //if(GetLPid()) G4cout << __FUNCTION__ << "(" << GetLPid() << ", " << track.GetTrackID() << ")" << G4endl;
   G4double mfp = INFINITY;
-  if(track.GetParticleDefinition()->GetPDGEncoding() == -13) {
-    G4double xs = GetCrossSection(track.GetKineticEnergy(), track.GetMaterialCutsCouple());
-    *condition = xs > 0 ? Forced : NotForced;
-    mfp = 1 / xs;
+  if(!fMupTargetEnToLL) {
+    *condition = InActivated;
+  } else {
+    if(track.GetParticleDefinition()->GetPDGEncoding() == -13) {
+      G4double xs = GetCrossSection(track.GetKineticEnergy(), track.GetMaterialCutsCouple());
+      mfp = 1 / xs;
+    }
+    *condition = mfp == INFINITY ? NotForced : Forced;
   }
   //if(GetLPid()) G4cout << __FUNCTION__ << "(" << GetLPid() << ", " << track.GetTrackID() << ") -> " << mfp << G4endl;
   return mfp;
