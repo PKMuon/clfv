@@ -2,7 +2,7 @@ import MG5Card
 import MG5Units
 import numpy as np
 
-zp_masses = np.linspace(0.1, 1.0, 46)
+zp_masses = np.linspace(0.01, 1.0, 100)
 #zp_masses = np.logspace(-1, +3, 41)
 zp_width_card = MG5Card.MG5Card('cards/zp_width.dat')
 
