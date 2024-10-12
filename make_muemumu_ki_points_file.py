@@ -25,6 +25,7 @@ for zp_mass, zp_mass_points in ki_points:
     i = muemumu_st_points['zp_masses'].searchsorted(zp_mass)
 
     outfile = ROOT.TFile.Open(f'data/muemumu_ki_{zp_mass:.18e}.root', 'recreate')
+    outfile.SetBit(outfile.k630forwardCompatibility)
     tree = ROOT.TTree('ki_points', 'kinematic points')
     zp_mass_branch = np.array(zp_mass, dtype=np.float64)
     muon_energy_branch = np.empty(1, dtype=np.float64)

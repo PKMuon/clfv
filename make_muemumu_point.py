@@ -10,7 +10,7 @@ muemumu_sc_card = MG5Card.MG5Card('cards/muemumu_sc.dat')
 muemumu_tc_card = MG5Card.MG5Card('cards/muemumu_tc.dat')
 muemumu_st_card = MG5Card.MG5Card('cards/muemumu_st.dat')
 muemumu_ki_card = MG5Card.MG5Card('cards/muemumu_ki.dat')
-muon_energies = np.logspace(1.51, 3.00, 150)
+muon_energies = np.logspace(1.51, 3.00, 150)[1:]
 
 def make_muemumu_point(zp_mass, muon_energy, card, nevent):
     print('make_muemumu_point:', zp_mass, muon_energy, sep='\t', flush=True)
