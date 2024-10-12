@@ -65,5 +65,5 @@ for zp_mass, zp_mass_points in ki_points:
         cbar.set_ticks(np.linspace(0, 1, len(tickposes)))
         cbar.set_ticklabels(['%.2e' % f for f in muon_energies[tickposes]])
         plt.tight_layout()
-        plt.savefig(hist_name + '_' + str(zp_mass) + '.pdf')
+        plt.savefig(hist_name + '_' + '%.2f' % zp_mass + '.pdf')
         plt.close()
