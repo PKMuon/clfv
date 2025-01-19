@@ -7,6 +7,7 @@ m_mu = particle.Particle.from_pdgid(13).mass / 1000  # GeV
 
 alpha = np.linspace(0, np.pi, 10001)
 for l, m_l, E_mu in [(r'e', m_e, (0.93, 11.1, 28.2)), (r'\mu', m_mu, (33.6, 50.2, 77.2))]:
+    plt.figure(figsize=(4, 3))
     for E_mu in E_mu:
         E = E_mu + m_e
         p = np.sqrt(E_mu*E_mu - m_mu*m_mu)
@@ -19,7 +20,8 @@ for l, m_l, E_mu in [(r'e', m_e, (0.93, 11.1, 28.2)), (r'\mu', m_mu, (33.6, 50.2
         get_theta = lambda alpha: np.arctan(get_A(alpha) / gamma)
         theta = get_theta(alpha)
         theta += np.pi * (theta < 0)
-        plt.plot(alpha, theta, label=r'$\mu^+e^- \to l^+l^-$, $E_\mu = $'.replace('l', l) + '%.2f' % E_mu + ' GeV')
+        #plt.plot(alpha, theta, label=r'$\mu^+e^- \to l^+l^-$, $E_\mu = $'.replace('l', l) + '%.2f' % E_mu + ' GeV')
+        plt.plot(alpha, theta, label=r'$E_\mu = $'.replace('l', l) + '%.2f' % E_mu + ' GeV')
     plt.xlabel(r'$\alpha$ [rad]')
     plt.ylabel(r'$\theta$ [rad]')
     plt.legend()

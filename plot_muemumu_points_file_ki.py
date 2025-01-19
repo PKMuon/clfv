@@ -22,6 +22,7 @@ ki_points = sorted(ki_point_index.items())
 
 # Draw a plot for each (zp_mass, hist_name).
 for zp_mass, zp_mass_points in ki_points:
+    if zp_mass not in [0.22, 0.3]: continue
     lc_index = { }  # [hist_name]
     lc_meta = { }  # [hist_name]
     print(zp_mass_points)
@@ -54,16 +55,17 @@ for zp_mass, zp_mass_points in ki_points:
     for hist_name, lc in lc_index.items():
         colors = plt.cm.viridis(np.linspace(0, 1, len(muon_energies)))
         lc = LineCollection(lc, colors=colors)
-        plt.figure()
+        plt.figure(figsize=(4, 3))
         plt.gca().add_collection(lc)
         plt.gca().autoscale()
-        plt.xlabel(lc_meta[hist_name]['xtitle'])
+        plt.xlabel(r'$\alpha$ [mrad]')
         plt.ylabel(lc_meta[hist_name]['ytitle'])
         cbar = plt.colorbar(lc)
-        tickposes = np.arange(len(muon_energies))[::10]
-        if len(tickposes) * 10 != len(muon_energies): tickposes = np.append(tickposes, len(muon_energies) - 1)
+        cbar.set_label(r'$E_\mu$ [TeV]')
+        tickposes = np.arange(len(muon_energies))[::20]
+        if len(tickposes) * 20 != len(muon_energies): tickposes = np.append(tickposes, len(muon_energies) - 1)
         cbar.set_ticks(np.linspace(0, 1, len(tickposes)))
-        cbar.set_ticklabels(['%.2e' % f for f in muon_energies[tickposes]])
+        cbar.set_ticklabels(['%.3f' % (f / 1000) for f in muon_energies[tickposes]])
         plt.tight_layout()
         plt.savefig(hist_name + '_' + '%.2f' % zp_mass + '.pdf')
         plt.close()

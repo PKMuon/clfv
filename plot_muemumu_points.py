@@ -3,6 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+plt.figure(figsize=(6, 4.5))
 for channel in 'sc', 'tc':
     muemumu_points = np.load(f'data/muemumu_{channel}_points.npz')
     zp_masses = muemumu_points['zp_masses']
@@ -14,8 +15,8 @@ for channel in 'sc', 'tc':
         #plt.plot(muon_energies, xs[:,0], '.-', label=prefix)
         #plt.plot(muon_energies, xs[:,0], label=prefix)
         plt.plot(muon_energies, xs[:,0], '-' if channel == 'sc' else '--', label=prefix)
-plt.xlabel('Muon energy [GeV]')
-plt.ylabel('Cross section [pb]')
+plt.xlabel('Muon energy $E_\\mu$ [GeV]')
+plt.ylabel('Cross section $\\sigma$ [pb]')
 plt.xscale('log')
 plt.yscale('log')
 plt.legend(loc='upper right')
