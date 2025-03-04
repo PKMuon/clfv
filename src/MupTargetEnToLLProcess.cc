@@ -17,9 +17,10 @@
 
 MupTargetEnToLLProcess::MupTargetEnToLLProcess()
     : G4VDiscreteProcess("MupTargetEnToLLProcess", fUserDefined),
+      fRun(nullptr),
       fMupTargetEnToLL(nullptr),
-      fLpDefinition(nullptr),
-      fLnDefinition(nullptr),
+      fMuonPlus(G4ParticleTable::GetParticleTable()->GetParticle(-13)),
+      fElectron(G4ParticleTable::GetParticleTable()->GetParticle(11)),
       fXSSF(1.0),
       fMuonMass(G4ParticleTable::GetParticleTable()->GetParticle(13)->GetPDGMass())
 {
@@ -62,8 +63,8 @@ G4VParticleChange *MupTargetEnToLLProcess::PostStepDoIt(const G4Track &track, co
     if(logRandom < logProbKeep) break;
 
     //changed = true;
-    auto lp = new G4DynamicParticle(fLpDefinition, lpMomentum);
-    auto ln = new G4DynamicParticle(fLnDefinition, lnMomentum);
+    auto lp = new G4DynamicParticle(fMuonPlus, lpMomentum);
+    auto ln = new G4DynamicParticle(fElectron, lnMomentum);
     fRun->AddScatter(&track, lp, ln);
 
     change.ProposeEnergy(0);
@@ -107,17 +108,13 @@ G4double MupTargetEnToLLProcess::MinPrimaryEnergy(const G4ParticleDefinition *de
   return minPrimaryEnergy;
 }
 
-void MupTargetEnToLLProcess::Configure(G4int lPid, G4String pointsFile, G4double xssf)
+void MupTargetEnToLLProcess::Configure(const std::vector<G4String> &rootfiles, G4double xssf)
 {
   fRun = ((RunAction *)G4RunManager::GetRunManager()->GetUserRunAction())->GetRun();
   delete fMupTargetEnToLL;
-  fMupTargetEnToLL = new MupTargetEnToLL(lPid, pointsFile);
-  fLpDefinition = G4ParticleTable::GetParticleTable()->FindParticle(-abs(lPid));
-  fLnDefinition = G4ParticleTable::GetParticleTable()->FindParticle(+abs(lPid));
+  fMupTargetEnToLL = new MupTargetEnToLL(rootfiles);
   fXSSF = xssf;
 }
-
-G4int MupTargetEnToLLProcess::GetLPid() const { return fLnDefinition ? fLnDefinition->GetPDGEncoding() : 0; }
 
 G4double MupTargetEnToLLProcess::GetMeanFreePath(
     const G4Track &track, [[maybe_unused]] G4double previousStepSize, G4ForceCondition *condition)

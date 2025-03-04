@@ -1,32 +1,40 @@
 #pragma once
-#include <TH1.h>
+#include <TClonesArray.h>
+#include <TFile.h>
+#include <TLorentzVector.h>
+#include <TTree.h>
 
 #include <G4ThreeVector.hh>
 #include <memory>
 #include <tuple>
-#include <utility>
 #include <vector>
 
 class MupTargetEnToLL {
 public:
-  MupTargetEnToLL(int l_pid, const char *points_file);
+  MupTargetEnToLL(const std::vector<G4String> &rootfiles);
+  ~MupTargetEnToLL();
 
   // For incoming mu+ beams towards z+.
-  void Scatter(double mup_energy, double lp_out_alpha, G4ThreeVector &lp_out_p, G4ThreeVector &ln_out_p) const;
+  void Scatter(double mup_energy, double lp_out_alpha, double lp_out_phi, TLorentzVector p4_miss,
+      G4ThreeVector &lp_out_p, G4ThreeVector &ln_out_p) const;
 
   // For arbitrary incoming mu+ beams.
-  void Scatter(G4ThreeVector &lp_p, double lp_out_alpha, G4ThreeVector &ln_out_p) const;
+  void Scatter(G4ThreeVector &lp_p, double lp_out_alpha, double lp_out_phi, TLorentzVector p4_miss,
+      G4ThreeVector &ln_out_p) const;
 
-  // Request lp_out_alpha sampling.
+  // Request sampling.
   double Scatter(G4ThreeVector &lp_p, G4ThreeVector &ln_out_p) const;
 
   double CrossSection(double mup_energy) const;
   double MinPrimaryEnergy() const;
 
 private:
-  double e_mass, mu_mass, l_mass;
-  std::vector<std::tuple<double, double, std::unique_ptr<TH1>>> points;  // (mup_energy, xs, lp_out_alpha)
+  double e_mass, mu_mass;
+  std::vector<std::unique_ptr<TFile>> files;
+  std::vector<std::tuple<double, double, TTree *>> points;  // (mup_energy, xs, tree)
+  TClonesArray *Events, *Particles;
 
-  void LoadPoints(const char *points_file);
-  std::pair<double, double> Sample(double mup_energy) const;  // (xs, lp_out_alpha)
+  // (xs, lp_out_alpha, ln_out_phi, p4_miss)
+  std::tuple<double, double, double, TLorentzVector> Sample(double mup_energy) const;
+  std::tuple<double, double, TLorentzVector> Draw(TTree *) const;
 };

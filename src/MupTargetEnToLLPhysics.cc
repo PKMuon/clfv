@@ -11,7 +11,7 @@
 #include "MupTargetEnToLLProcess.hh"
 
 MupTargetEnToLLPhysics *MupTargetEnToLLPhysics::fInstance = new MupTargetEnToLLPhysics;
-thread_local std::map<G4int, MupTargetEnToLLProcess *> MupTargetEnToLLPhysics::fProcesses;
+thread_local MupTargetEnToLLProcess *MupTargetEnToLLPhysics::fProcess;
 
 MupTargetEnToLLPhysics::MupTargetEnToLLPhysics() { }
 
@@ -31,15 +31,11 @@ void MupTargetEnToLLPhysics::ConstructProcess()
 {
   G4ProcessManager *processManager = G4MuonPlus::Definition()->GetProcessManager();
 
-  for(G4int lPid : { 11, 13, 15 }) {
-    auto process = new MupTargetEnToLLProcess;
-    processManager->AddDiscreteProcess(process);
-    fProcesses.emplace(lPid, process);
-  }
+  fProcess = new MupTargetEnToLLProcess;
+  processManager->AddDiscreteProcess(fProcess);
 }
 
-void MupTargetEnToLLPhysics::Configure(G4int lPid, G4String pointsFile, G4double xssf)
+void MupTargetEnToLLPhysics::Configure(const std::vector<G4String> &pointsFile, G4double xssf)
 {
-  MupTargetEnToLLProcess *process = fProcesses.at(lPid);
-  process->Configure(lPid, pointsFile, xssf);
+  fProcess->Configure(pointsFile, xssf);
 }

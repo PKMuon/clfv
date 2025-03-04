@@ -36,6 +36,11 @@ include(${ROOT_USE_FILE})
 #find_package(yaml-cpp REQUIRED)
 
 #----------------------------------------------------------------------------
+# Setup ExRootAnalysis include directories
+#
+include_directories(SYSTEM ExRootAnalysis)
+
+#----------------------------------------------------------------------------
 # General compilation and linkage options
 #
 option(ENABLE_SANITIZER "compile and link with sanitizing flags" OFF)

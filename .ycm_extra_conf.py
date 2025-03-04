@@ -33,9 +33,11 @@ while dirname != '/':
 filename = os.path.join(dirname, basename)
 
 # Execute parent configuration script.
-exec(open(filename).read())
+g = {**globals(), '__file__': filename}
+exec(open(filename).read(), g)
+g.update(globals())
+globals().update(g)
 
 # Add include paths for this project.
-for dirpath, _, _ in os.walk(dirname_org):
-    if os.path.basename(dirpath) == 'include':
-        flags.append('-I' + dirpath)
+flags.append('-I' + os.path.join(dirname_org, 'include'))
+flags.append('-I' + os.path.join(dirname_org, 'ExRootAnalysis'))

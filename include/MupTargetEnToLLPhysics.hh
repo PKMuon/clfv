@@ -1,5 +1,5 @@
 #pragma once
-#include <map>
+#include <vector>
 
 #include "G4VPhysicsConstructor.hh"
 
@@ -10,7 +10,7 @@ public:
   void ConstructParticle() override;
   void ConstructProcess() override;
 
-  void Configure(G4int lPid, G4String pointsFile, G4double xssf = 1.0);
+  void Configure(const std::vector<G4String> &rootfiles, G4double xssf = 1.0);
   static MupTargetEnToLLPhysics *GetInstance() { return fInstance; }
 
 private:
@@ -18,5 +18,5 @@ private:
   ~MupTargetEnToLLPhysics() override;
 
   static MupTargetEnToLLPhysics *fInstance;
-  static thread_local std::map<G4int, MupTargetEnToLLProcess *> fProcesses;
+  static thread_local MupTargetEnToLLProcess *fProcess;
 };
