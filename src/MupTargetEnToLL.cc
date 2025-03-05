@@ -28,7 +28,7 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
     tree = (TTree *)files[i]->Get("LHEF");
     tree->SetBranchAddress("Events", &Events);
     tree->SetBranchAddress("Particles", &Particles);
-    tree->GetEntry(0);
+    if(!tree->GetEntry(0)) throw std::runtime_error("Error reading file " + rootfiles[i]);
     auto event = (TRootLHEFEvent *)Events->At(0);
     xs = event->Weight * pb;
   }
