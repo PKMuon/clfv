@@ -150,18 +150,24 @@ std::tuple<double, double, TLorentzVector> MupTargetEnToLL::Draw(TTree *tree) co
   tree->GetEntry(i);
 
   // Process: mu+ e- > mu+ e- zp
-  TLorentzVector p4_mu, p4_e, p4_zp;
+  int n_mu = 0, n_e = 0, n_nu = 0;
+  TLorentzVector p4_mu, p4_e, p4_nu1, p4_nu2;
   for(int j = 0; j < Particles->GetEntries(); ++j) {
     auto particle = (TRootLHEFParticle *)Particles->UncheckedAt(j);
     if(particle->Status != 1) continue;
     if(particle->PID == -13) {
       p4_mu.SetPxPyPzE(particle->Px, particle->Py, particle->Pz, particle->E);
+      ++n_mu;
     } else if(particle->PID == 11) {
       p4_e.SetPxPyPzE(particle->Px, particle->Py, particle->Pz, particle->E);
+      ++n_e;
     } else {
-      p4_zp.SetPxPyPzE(particle->Px, particle->Py, particle->Pz, particle->E);
+      (n_nu ? p4_nu2 : p4_nu1).SetPxPyPzE(particle->Px, particle->Py, particle->Pz, particle->E);
+      ++n_nu;
     }
   }
+  assert(n_mu == 1 && n_e == 1 && n_nu == 2);
+  TLorentzVector p4_zp = p4_nu1 + p4_nu2;
 
   TVector3 b = (p4_mu + p4_e + p4_zp).BoostVector();
   p4_mu.Boost(-b), p4_e.Boost(-b), p4_zp.Boost(-b);
