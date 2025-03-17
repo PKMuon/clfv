@@ -72,39 +72,57 @@ void MupTargetEnToLL::Scatter(double mup_energy, double lp_out_alpha, double lp_
   double gamma = e / e_com, beta = p / e;
 
   // Compute momenta in COM frame.
-  double M = (p4_miss.P() * p4_miss.P() + e_mass * e_mass - mu_mass * mu_mass - p4_miss.E()) / (2 * p4_miss.E());
-  double A = sin(lp_out_alpha) * sin(lp_out_alpha) * cos(lp_out_phi) * cos(lp_out_phi) * p4_miss.Px() * p4_miss.Px()
-      + sin(lp_out_alpha) * sin(lp_out_alpha) * sin(lp_out_phi) * sin(lp_out_phi) * p4_miss.Py() * p4_miss.Py()
-      + cos(lp_out_alpha) * cos(lp_out_alpha) * p4_miss.Pz() * p4_miss.Pz()
-      + 2 * sin(lp_out_alpha) * sin(lp_out_alpha) * cos(lp_out_phi) * sin(lp_out_phi) * p4_miss.Px() * p4_miss.Py()
-      + 2 * sin(lp_out_alpha) * cos(lp_out_alpha) * cos(lp_out_phi) * p4_miss.Px() * p4_miss.Pz()
-      + 2 * sin(lp_out_alpha) * cos(lp_out_alpha) * sin(lp_out_phi) * p4_miss.Py() * p4_miss.Pz() - 1;
-  double B = 2 * M * sin(lp_out_alpha) * cos(lp_out_phi) * p4_miss.Px()
-      + 2 * M * sin(lp_out_alpha) * sin(lp_out_phi) * p4_miss.Py() + 2 * M * cos(lp_out_alpha) * p4_miss.Pz();
-  double C = M * M - mu_mass * mu_mass;
-  double disc = B * B - 4 * A * C;
+  //double M = (-p4_miss.M() * p4_miss.M() + e_mass * e_mass - mu_mass * mu_mass) / (2 * p4_miss.E());
+  //double A = sin(lp_out_alpha) * sin(lp_out_alpha) * cos(lp_out_phi) * cos(lp_out_phi) * p4_miss.Px() * p4_miss.Px()
+  //    + sin(lp_out_alpha) * sin(lp_out_alpha) * sin(lp_out_phi) * sin(lp_out_phi) * p4_miss.Py() * p4_miss.Py()
+  //    + cos(lp_out_alpha) * cos(lp_out_alpha) * p4_miss.Pz() * p4_miss.Pz()
+  //    + 2 * sin(lp_out_alpha) * sin(lp_out_alpha) * cos(lp_out_phi) * sin(lp_out_phi) * p4_miss.Px() * p4_miss.Py()
+  //    + 2 * sin(lp_out_alpha) * cos(lp_out_alpha) * cos(lp_out_phi) * p4_miss.Px() * p4_miss.Pz()
+  //    + 2 * sin(lp_out_alpha) * cos(lp_out_alpha) * sin(lp_out_phi) * p4_miss.Py() * p4_miss.Pz() - 1;
+  //double B = 2 * M * sin(lp_out_alpha) * cos(lp_out_phi) * p4_miss.Px()
+  //    + 2 * M * sin(lp_out_alpha) * sin(lp_out_phi) * p4_miss.Py() + 2 * M * cos(lp_out_alpha) * p4_miss.Pz();
+  //double C = M * M - mu_mass * mu_mass;
+  //double disc = B * B - 4 * A * C;
+  //G4cout << "Computed M: " << M << G4endl;
+  //G4cout << "Computed A: " << A << G4endl;
+  //G4cout << "Computed B: " << B << G4endl;
+  //G4cout << "Computed C: " << C << G4endl;
+  TVector3 dp_mu(0, 0, 1);
+  dp_mu.SetTheta(lp_out_alpha), dp_mu.SetPhi(lp_out_phi);
+  double A = p4_miss.P() * p4_miss.Vect().Unit().Dot(dp_mu);
+  double B = (e2_com + mu_mass * mu_mass + p4_miss.M() * p4_miss.M() - e_mass * e_mass) / 2 - e_com * p4_miss.M();
+  double C = p4_miss.E() - e_com;
+  double disc = (A * B) * (A * B) - (A * A - C * C) * (B * B - C * C * mu_mass * mu_mass);
+  double p_mu_1 = ((A * B) + sqrt(disc)) / (A * A - C * C);
+  double p_mu_2 = ((A * B) - sqrt(disc)) / (A * A - C * C);
+  G4cout << "Computed p_mu_1: " << p_mu_1 << G4endl;
+  G4cout << "Computed p_mu_2: " << p_mu_2 << G4endl;
 
-  G4cout << "Computed M: " << M << G4endl;
-  G4cout << "Computed A: " << A << G4endl;
-  G4cout << "Computed B: " << B << G4endl;
-  G4cout << "Computed C: " << C << G4endl;
-
-  double lp_mu_com_plus = (-B + sqrt(disc)) / (2 * A);
-  double lp_mu_com_minus = (-B - sqrt(disc)) / (2 * A);
-  double lp_mu_com = (lp_mu_com_plus > 0) ? lp_mu_com_plus : (lp_mu_com_minus > 0) ? lp_mu_com_minus : -1;
-  if(lp_mu_com < 0) return;
-  double lp_out_pt = lp_mu_com * sin(lp_out_alpha);
-  G4cout << "Computed lp_mu_com: " << lp_mu_com << G4endl;
-  G4cout << "Computed lp_out_pt: " << lp_out_pt << G4endl;
+  //double lp_out_com_plus = (-B + sqrt(disc)) / (2 * A);
+  //double lp_out_com_minus = (-B - sqrt(disc)) / (2 * A);
+  double lp_out = (p_mu_1 >= 0) ? p_mu_1 : (p_mu_2 >= 0) ? p_mu_2 : -1;
+  double lp_out_pt = lp_out * sin(lp_out_alpha);
+  double lp_out_px = lp_out_pt * cos(lp_out_phi);
+  double lp_out_py = lp_out_pt * sin(lp_out_phi);
+  double lp_out_pz = lp_out * cos(lp_out_alpha);
+  double lp_out_e = hypot(lp_out, mu_mass);
+  double ln_out_px = -lp_out_px - p4_miss.Px();
+  double ln_out_py = -lp_out_py - p4_miss.Py();
+  double ln_out_pz = -lp_out_pz - p4_miss.Pz();
+  double ln_out = hypot(hypot(ln_out_px, ln_out_py), ln_out_pz);
+  double ln_out_e = hypot(ln_out, e_mass);
+  double residual = lp_out_e + ln_out_e + p4_miss.E() - e_com;
+  G4cout << "Computed lp_out: " << lp_out << G4endl;
+  G4cout << "Computed ln_out: " << ln_out << G4endl;
+  G4cout << "Computed residual: " << residual << G4endl;
 
   // Boost to LAB frame.
-  lp_out_p.setX(lp_out_pt * cos(lp_out_phi));
-  lp_out_p.setY(lp_out_pt * sin(lp_out_phi));
-  lp_out_p.setZ(gamma * (lp_mu_com * cos(lp_out_alpha) + beta * e_com / 2));
-
-  ln_out_p.setX(-lp_out_p.x() - p4_miss.Px());
-  ln_out_p.setY(-lp_out_p.y() - p4_miss.Py());
-  ln_out_p.setZ(-lp_out_p.z() - p4_miss.Pz());
+  lp_out_p.setX(lp_out_px);
+  lp_out_p.setY(lp_out_py);
+  lp_out_p.setZ(gamma * (lp_out_pz + beta * lp_out_e));
+  ln_out_p.setX(ln_out_px);
+  ln_out_p.setY(ln_out_py);
+  ln_out_p.setZ(gamma * (ln_out_pz + beta * ln_out_e));
 
   G4cout << "-------------------------------------------" << G4endl;
   G4cout << "Lab frame outgoing muon momentum (lp_out_p):" << G4endl;
