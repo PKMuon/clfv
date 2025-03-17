@@ -31,22 +31,14 @@ public:
 
 private:
   double e_mass, mu_mass;
-  std::vector<std::unique_ptr<TFile>> files;
-  std::vector<std::tuple<double, double, TTree *>> points;  // (mup_energy, xs, tree)
-  TClonesArray *Events, *Particles;
-  
+  std::vector<TFile *> files;
+
+  // (mup_energy, xs, tree, events, particles)
+  std::vector<std::tuple<double, double, TTree *, TClonesArray *, TClonesArray *>> points;
+
   std::regex energy_regex;
 
   // (xs, lp_out_alpha, ln_out_phi, p4_miss)
   std::tuple<double, double, double, TLorentzVector> Sample(double mup_energy) const;
-  std::tuple<double, double, TLorentzVector> Draw(TTree *) const;
-  
-  //int Event_Nparticles;
-  //double Event_Weight;
-
-  //static  const int MAX_PARTICLES = 1000000; // 设定最大粒子数
-  //Int_t Particle_PID[MAX_PARTICLES], Particle_Status[MAX_PARTICLES];
-  //Double_t Particle_Px[MAX_PARTICLES], Particle_Py[MAX_PARTICLES], Particle_Pz[MAX_PARTICLES], Particle_E[MAX_PARTICLES];
-
-  //Int_t Particle_size = 0; // 粒子数
+  std::tuple<double, double, TLorentzVector> Draw(TTree *, TClonesArray *) const;
 };

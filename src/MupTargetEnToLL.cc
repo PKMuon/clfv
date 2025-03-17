@@ -18,18 +18,17 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
   G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
   e_mass = particleTable->FindParticle(11)->GetPDGMass();
   mu_mass = particleTable->FindParticle(13)->GetPDGMass();
-  Events = Particles = nullptr;
 
   size_t nfile = rootfiles.size();
   files.resize(nfile), points.resize(nfile);
   std::smatch match;
   G4cout << "Number of rootfiles: " << rootfiles.size() << G4endl;
   for(size_t i = 0; i < nfile; ++i) {
-    files[i].reset(new TFile(rootfiles[i]));
+    files[i] = new TFile(rootfiles[i]);
     if (!files[i]->IsOpen()) {
         G4cerr << "Error opening file: " << rootfiles[i] << G4endl;
     }
-    auto &[energy, xs, tree] = points[i];
+    auto &[energy, xs, tree, events, particles] = points[i];
     //energy = 0 * GeV;  // [TODO] Parse energy from filename.
     // 从文件名解析能量
     if (std::regex_search(rootfiles[i], match, energy_regex)) {
@@ -42,8 +41,8 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
     if (!tree) {
         G4cerr << "Error: TTree 'LHEF' not found in file: " << rootfiles[i] << G4endl;
     }
-    tree->SetBranchAddress("Event", &Events);
-    tree->SetBranchAddress("Particle", &Particles);
+    tree->SetBranchAddress("Event", &events);
+    tree->SetBranchAddress("Particle", &particles);
     if (!tree->GetBranch("Event") || !tree->GetBranch("Particle")) {
         G4cerr << "Error: Missing required branches in " << rootfiles[i] << G4endl;
     }
@@ -51,7 +50,7 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
     if (!tree->GetEntry(0)) {
         G4cerr << "Error reading first entry in file: " << rootfiles[i] << G4endl;
     }
-    auto event = (TRootLHEFEvent *)Events->At(0);
+    auto event = (TRootLHEFEvent *)events->At(0);
     xs = event->Weight * pb;
   }
   sort(points.begin(), points.end());  // [NOTE] Points do not match the order of rootfiles then.
@@ -59,10 +58,10 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
 
 MupTargetEnToLL::~MupTargetEnToLL()
 {
-  for(auto [energy, xs, tree] : points) {
-    tree->SetBranchAddress("Event", NULL);
-    tree->SetBranchAddress("Particle", NULL);
-  }
+  // [FIXME]
+  //for(TFile *file : files) {
+  //  if(file) file->Close();
+  //}
 }
 
 void MupTargetEnToLL::Scatter(double mup_energy, double lp_out_alpha, double lp_out_phi, TLorentzVector p4_miss,
@@ -165,8 +164,8 @@ double MupTargetEnToLL::CrossSection(double mup_energy) const
       std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
   if(right == points.begin() || right == points.end()) return 0.0;
   auto left = prev(right);
-  auto &[l_mup_energy, l_xs, l_tree] = *left;
-  auto &[r_mup_energy, r_xs, r_tree] = *right;
+  auto &[l_mup_energy, l_xs, l_tree, l_events, l_particles] = *left;
+  auto &[r_mup_energy, r_xs, r_tree, r_events, r_particles] = *right;
   auto [l_weight, r_weight] = linear_interp_weights(l_mup_energy, r_mup_energy, mup_energy);
 
   return l_weight * l_xs + r_weight * r_xs;
@@ -181,8 +180,8 @@ std::tuple<double, double, double, TLorentzVector> MupTargetEnToLL::Sample(doubl
       std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
   if(right == points.begin() || right == points.end()) return { 0, NAN, NAN, { NAN, NAN, NAN, NAN } };
   auto left = prev(right);
-  auto &[l_mup_energy, l_xs, l_tree] = *left;
-  auto &[r_mup_energy, r_xs, r_tree] = *right;
+  auto &[l_mup_energy, l_xs, l_tree, l_events, l_particles] = *left;
+  auto &[r_mup_energy, r_xs, r_tree, r_events, r_particles] = *right;
   auto [l_weight, r_weight] = linear_interp_weights(l_mup_energy, r_mup_energy, mup_energy);
 
   // Interpolate for xs.
@@ -190,12 +189,13 @@ std::tuple<double, double, double, TLorentzVector> MupTargetEnToLL::Sample(doubl
 
   // Use weighted sampling in place of histogram interpolation.
   auto &tree = G4UniformRand() < l_weight ? l_tree : r_tree;
-  auto [lp_out_alpha, lp_out_phi, e_miss] = Draw(tree);
+  auto &particles = tree == l_tree ? l_particles : r_particles;
+  auto [lp_out_alpha, lp_out_phi, e_miss] = Draw(tree, particles);
 
   return { xs, lp_out_alpha, lp_out_phi, e_miss };
 }
 
-std::tuple<double, double, TLorentzVector> MupTargetEnToLL::Draw(TTree *tree) const
+std::tuple<double, double, TLorentzVector> MupTargetEnToLL::Draw(TTree *tree, TClonesArray *Particles) const
 {
   size_t n = tree->GetEntries();
   size_t i = G4UniformRand() * n;
