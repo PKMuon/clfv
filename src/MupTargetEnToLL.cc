@@ -51,10 +51,9 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
 
 MupTargetEnToLL::~MupTargetEnToLL()
 {
-  // [FIXME]
-  //for(TFile *file : files) {
-  //  if(file) file->Close();
-  //}
+  // [IMPORTANT NOTE]
+  // Do NOT close opened ROOT files here.
+  // This class may be destructed after TROOT.
 }
 
 void MupTargetEnToLL::Scatter(double mup_energy, double lp_out_alpha, double lp_out_phi, TLorentzVector p4_miss,
