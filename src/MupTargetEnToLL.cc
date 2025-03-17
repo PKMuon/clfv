@@ -41,6 +41,7 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
     tree->SetBranchAddress("Event", &events);
     tree->SetBranchAddress("Particle", &particles);
     tree->GetEntry(0);
+    static TRootLHEFEvent dummy;
     auto event = (TRootLHEFEvent *)events->At(0);
     xs = event->Weight * pb;
     G4cout << "Extracted cross section: " << xs / pb << " pb" << G4endl;
@@ -199,6 +200,7 @@ std::tuple<double, double, TLorentzVector> MupTargetEnToLL::Draw(TTree *tree, TC
   int n_mu = 0, n_e = 0, n_nu = 0;
   TLorentzVector p4_mu, p4_e, p4_nu1, p4_nu2;
   for(int j = 0; j < Particles->GetEntries(); ++j) {
+    static TRootLHEFParticle dummy;
     auto particle = (TRootLHEFParticle *)Particles->UncheckedAt(j);
     if(particle->Status != 1) continue;
     if(particle->PID == -13) {
