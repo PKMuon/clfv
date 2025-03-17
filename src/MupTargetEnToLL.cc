@@ -22,10 +22,10 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
   mu_mass = particleTable->FindParticle(13)->GetPDGMass();
 
   size_t nfile = rootfiles.size();
-  files.resize(nfile), points.resize(nfile);
-  std::smatch match;
   G4cout << "Number of rootfiles: " << rootfiles.size() << G4endl;
+  files.resize(nfile), points.resize(nfile);
   std::regex energy_regex(R"((\d+(\.\d+)?)\.root$)");
+  std::smatch match;
   for(size_t i = 0; i < nfile; ++i) {
     files[i] = new TFile(rootfiles[i]);
     if(!files[i]->IsOpen()) throw std::runtime_error("failed opening ROOT file: " + rootfiles[i]);
