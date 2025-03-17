@@ -8,7 +8,6 @@
 #include <memory>
 #include <tuple>
 #include <vector>
-#include <regex>
 
 class MupTargetEnToLL {
 public:
@@ -35,8 +34,6 @@ private:
 
   // (mup_energy, xs, tree, events, particles)
   std::vector<std::tuple<double, double, TTree *, TClonesArray *, TClonesArray *>> points;
-
-  std::regex energy_regex;
 
   // (xs, lp_out_alpha, ln_out_phi, p4_miss)
   std::tuple<double, double, double, TLorentzVector> Sample(double mup_energy) const;
