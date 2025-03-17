@@ -8,10 +8,12 @@
 #include <G4ios.hh>
 #include <Randomize.hh>
 #include <algorithm>
+#include <regex>
 
 static G4double pb = 1e-12 * 1e-24 * cm2;
 
 MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
+    : energy_regex(R"((\d+\.?\d*))")
 {
   G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
   e_mass = particleTable->FindParticle(11)->GetPDGMass();
@@ -20,15 +22,35 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
 
   size_t nfile = rootfiles.size();
   files.resize(nfile), points.resize(nfile);
+  std::smatch match;
+  G4cout << "Number of rootfiles: " << rootfiles.size() << G4endl;
   for(size_t i = 0; i < nfile; ++i) {
     files[i].reset(new TFile(rootfiles[i]));
-    if(!files[i]->IsOpen()) throw std::runtime_error("Error opening file " + rootfiles[i]);
+    if (!files[i]->IsOpen()) {
+        G4cerr << "Error opening file: " << rootfiles[i] << G4endl;
+    }
     auto &[energy, xs, tree] = points[i];
-    energy = 0 * GeV;  // [TODO] Parse energy from filename.
+    //energy = 0 * GeV;  // [TODO] Parse energy from filename.
+    // 从文件名解析能量
+    if (std::regex_search(rootfiles[i], match, energy_regex)) {
+        energy = std::stod(match[1].str()) / 1000.0 * GeV;  // 解析数值并转换为 GeV
+        G4cout << "Extracted energy: " << energy << " GeV" << G4endl;
+    } else {
+        G4cout << "Regex failed for filename: " << rootfiles[i] << G4endl;
+    }
     tree = (TTree *)files[i]->Get("LHEF");
-    tree->SetBranchAddress("Events", &Events);
-    tree->SetBranchAddress("Particles", &Particles);
-    if(!tree->GetEntry(0)) throw std::runtime_error("Error reading file " + rootfiles[i]);
+    if (!tree) {
+        G4cerr << "Error: TTree 'LHEF' not found in file: " << rootfiles[i] << G4endl;
+    }
+    tree->SetBranchAddress("Event", &Events);
+    tree->SetBranchAddress("Particle", &Particles);
+    if (!tree->GetBranch("Event") || !tree->GetBranch("Particle")) {
+        G4cerr << "Error: Missing required branches in " << rootfiles[i] << G4endl;
+    }
+   
+    if (!tree->GetEntry(0)) {
+        G4cerr << "Error reading first entry in file: " << rootfiles[i] << G4endl;
+    }
     auto event = (TRootLHEFEvent *)Events->At(0);
     xs = event->Weight * pb;
   }
@@ -38,16 +60,17 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
 MupTargetEnToLL::~MupTargetEnToLL()
 {
   for(auto [energy, xs, tree] : points) {
-    tree->SetBranchAddress("Events", NULL);
-    tree->SetBranchAddress("Particles", NULL);
+    tree->SetBranchAddress("Event", NULL);
+    tree->SetBranchAddress("Particle", NULL);
   }
-  delete Events;
-  delete Particles;
 }
 
 void MupTargetEnToLL::Scatter(double mup_energy, double lp_out_alpha, double lp_out_phi, TLorentzVector p4_miss,
     G4ThreeVector &lp_out_p, G4ThreeVector &ln_out_p) const
 {
+  G4cout << "Entering Scatter function..." << G4endl;
+  G4cout << "Computed mup_energy: " << mup_energy << G4endl;
+
   // Compute COM energy
   double e2_com = mu_mass * mu_mass + 2 * mup_energy * e_mass + e_mass * e_mass, e_com = sqrt(e2_com);
 
@@ -57,15 +80,44 @@ void MupTargetEnToLL::Scatter(double mup_energy, double lp_out_alpha, double lp_
   double gamma = e / e_com, beta = p / e;
 
   // Compute momenta in COM frame.  // [TODO]
-  assert(lp_out_alpha || lp_out_phi || p4_miss.E());  // [TODO] Remove this line after implementation.
+  // assert(lp_out_alpha || lp_out_phi || p4_miss.E());  // [TODO] Remove this line after implementation.
+  
+  double M = (p4_miss.Px() * p4_miss.Px() + p4_miss.Py() * p4_miss.Py() + p4_miss.Pz() * p4_miss.Pz() + e_mass * e_mass - mu_mass * mu_mass - p4_miss.E()) / (2 * p4_miss.E());
+  double A = sin(lp_out_alpha) * sin(lp_out_alpha) * cos(lp_out_phi) * cos(lp_out_phi) * p4_miss.Px() * p4_miss.Px() + sin(lp_out_alpha) * sin(lp_out_alpha) * sin(lp_out_phi) * sin(lp_out_phi) * p4_miss.Py() * p4_miss.Py() + cos(lp_out_alpha) * cos(lp_out_alpha) * p4_miss.Pz() * p4_miss.Pz() + 2 * sin(lp_out_alpha) * sin(lp_out_alpha) * cos(lp_out_phi) * sin(lp_out_phi) * p4_miss.Px() * p4_miss.Py() + 2 * sin(lp_out_alpha) * cos(lp_out_alpha) * cos(lp_out_phi) * p4_miss.Px() * p4_miss.Pz() + 2 * sin(lp_out_alpha) * cos(lp_out_alpha) * sin(lp_out_phi) * p4_miss.Py() * p4_miss.Pz() - 1;
+  double B = 2 * M * sin(lp_out_alpha) * cos(lp_out_phi) * p4_miss.Px() + 2 * M * sin(lp_out_alpha) * sin(lp_out_phi) * p4_miss.Py() + 2 * M * cos(lp_out_alpha) * p4_miss.Pz();
+  double C = M * M - mu_mass * mu_mass;
+  double disc = B * B - 4 * A * C;
+
+  G4cout << "Computed M: " << M << G4endl;
+  G4cout << "Computed A: " << A << G4endl;
+  G4cout << "Computed B: " << B << G4endl;
+  G4cout << "Computed C: " << C << G4endl;
+
+  double lp_mu_com_plus = (-B + sqrt(disc)) / (2 * A);
+  double lp_mu_com_minus = (-B - sqrt(disc)) / (2 * A);
+  double lp_mu_com = (lp_mu_com_plus > 0) ? lp_mu_com_plus : 
+                     (lp_mu_com_minus > 0) ? lp_mu_com_minus : -1;
+  if (lp_mu_com < 0) return; 
+  double lp_out_pt = lp_mu_com * sin(lp_out_alpha); 
+  G4cout << "Computed lp_mu_com: " << lp_mu_com << G4endl;
+  G4cout << "Computed lp_out_pt: " << lp_out_pt << G4endl; 
 
   // Boost to LAB frame. [TODO]
-  lp_out_p.setX(0.0);
-  lp_out_p.setY(0.0);
-  lp_out_p.setZ(gamma * (0.0 + beta * 0.0));
-  ln_out_p.setX(0.0);
-  ln_out_p.setY(0.0);
-  ln_out_p.setZ(gamma * (0.0 + beta * 0.0));
+  lp_out_p.setX(lp_out_pt * cos(lp_out_phi));
+  lp_out_p.setY(lp_out_pt * sin(lp_out_phi));
+  lp_out_p.setZ(gamma * (lp_mu_com * cos(lp_out_alpha) + beta * e_com / 2));
+
+  ln_out_p.setX(-lp_out_p.x() - p4_miss.Px());
+  ln_out_p.setY(-lp_out_p.y() - p4_miss.Py());
+  ln_out_p.setZ(-lp_out_p.z() - p4_miss.Pz());
+
+  G4cout << "-------------------------------------------" << G4endl;
+  G4cout << "Lab frame outgoing muon momentum (lp_out_p):" << G4endl;
+  G4cout << "  Px: " << lp_out_p.x() << "  Py: " << lp_out_p.y() << "  Pz: " << lp_out_p.z() << G4endl;
+
+  G4cout << "Lab frame outgoing electron momentum (ln_out_p):" << G4endl;
+  G4cout << "  Px: " << ln_out_p.x() << "  Py: " << ln_out_p.y() << "  Pz: " << ln_out_p.z() << G4endl;
+  G4cout << "-------------------------------------------" << G4endl;
 }
 
 void MupTargetEnToLL::Scatter(
@@ -150,6 +202,8 @@ std::tuple<double, double, TLorentzVector> MupTargetEnToLL::Draw(TTree *tree) co
   tree->GetEntry(i);
 
   // Process: mu+ e- > mu+ e- zp
+  // TLorentzVector p4_mu, p4_e, p4_zp;
+  
   int n_mu = 0, n_e = 0, n_nu = 0;
   TLorentzVector p4_mu, p4_e, p4_nu1, p4_nu2;
   for(int j = 0; j < Particles->GetEntries(); ++j) {
@@ -168,7 +222,6 @@ std::tuple<double, double, TLorentzVector> MupTargetEnToLL::Draw(TTree *tree) co
   }
   assert(n_mu == 1 && n_e == 1 && n_nu == 2);
   TLorentzVector p4_zp = p4_nu1 + p4_nu2;
-
   TVector3 b = (p4_mu + p4_e + p4_zp).BoostVector();
   p4_mu.Boost(-b), p4_e.Boost(-b), p4_zp.Boost(-b);
   return { p4_mu.Theta(), p4_mu.Phi(), p4_zp };

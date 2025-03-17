@@ -142,7 +142,7 @@ void Run::Manager::Branch(TTree *tree)
   tree->Branch("Scatters", &Scatters);
   tree->Branch("EnergyDeposit", &EnergyDeposit);
   tree->Branch("NonIonizingEnergyDeposit", &NonIonizingEnergyDeposit);
-
+  
   fFile = tree->GetCurrentFile();
   fFile->cd();
   fCuts = new TTree("cuts", "cuts");
