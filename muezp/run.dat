@@ -1,0 +1,27 @@
+import model Leptophilic_UFO
+generate mu+ e- > mu+ e- zp, zp > vl vl~
+output $SUB:workdir
+launch
+done
+set zpm = $SUB:zp_mass
+set gzpel = 0.0
+set gzper = 0.0
+set gzpmul = 1.0
+set gzpmur = 1.0
+set gzptal = 1.0
+set gzptar = 1.0
+set ZpW = AUTO
+set nevents = $SUB:nevent
+set lpp1 = 0
+set lpp2 = 0
+set ptl = -1.0
+set etal = -1.0
+set drll = -1.0
+set mmll = 0.0
+set mmnl = 0.0
+set ptllmin = 0.0
+set ebeam1 = $SUB:muon_energy
+set ebeam2 = $SUB:electron_energy
+set pdlabel = none
+set use_syst = False
+done
