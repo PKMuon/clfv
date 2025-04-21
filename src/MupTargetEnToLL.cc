@@ -15,6 +15,8 @@ namespace fs = std::filesystem;
 
 static G4double pb = 1e-12 * 1e-24 * cm2;
 
+#define FPRE R"(.*)"  // [XXX]
+
 MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
 {
   G4ParticleTable *particleTable = G4ParticleTable::GetParticleTable();
@@ -24,7 +26,7 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
   size_t nfile = rootfiles.size();
   G4cout << "Number of rootfiles: " << rootfiles.size() << G4endl;
   files.resize(nfile), points.resize(nfile);
-  std::regex energy_regex(R"((\d+(\.\d+)?)\.root$)");
+  std::regex energy_regex(R"(MueZp_()" FPRE R"()GeV_Zp_()" FPRE R"()GeV.root$)");
   std::smatch match;
   for(size_t i = 0; i < nfile; ++i) {
     files[i] = new TFile(rootfiles[i]);
