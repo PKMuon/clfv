@@ -34,7 +34,7 @@ MupTargetEnToLL::MupTargetEnToLL(const std::vector<G4String> &rootfiles)
     auto &[energy, xs, tree, events, particles] = points[i];
     std::string basename = fs::path(rootfiles[i].c_str()).filename();
     if(std::regex_search(basename, match, energy_regex)) {
-      energy = std::stod(match[1].str()) * MeV;
+      energy = std::stod(match[1].str()) * GeV;
       G4cout << "Extracted energy: " << energy / MeV << " MeV" << G4endl;
     } else {
       throw std::runtime_error("unrecognized ROOT path: " + rootfiles[i]);
