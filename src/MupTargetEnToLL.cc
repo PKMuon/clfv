@@ -176,6 +176,7 @@ double MupTargetEnToLL::CrossSection(double mup_energy) const
   // Locate end points.
   auto right =
       std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
+  if(right == points.end() && right != points.begin()) right = prev(right);  // [XXX] Temporarily enables extrapolation.
   if(right == points.begin() || right == points.end()) return 0.0;
   auto left = prev(right);
   auto &[l_mup_energy, l_xs, l_tree, l_events, l_particles] = *left;
@@ -192,6 +193,7 @@ std::tuple<double, double, double, TLorentzVector> MupTargetEnToLL::Sample(doubl
   // Locate end points.
   auto right =
       std::upper_bound(points.begin(), points.end(), mup_energy, [](double e, auto &p) { return e < std::get<0>(p); });
+  if(right == points.end() && right != points.begin()) right = prev(right);  // [XXX] Temporarily enables extrapolation.
   if(right == points.begin() || right == points.end()) return { 0, NAN, NAN, { NAN, NAN, NAN, NAN } };
   auto left = prev(right);
   auto &[l_mup_energy, l_xs, l_tree, l_events, l_particles] = *left;
